@@ -1,8 +1,9 @@
 import React from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { POST } from '../../Axios/api';
-import '../YSK/Login.module.css';
+import TokenManager from '../../utils/tokenManager';
 
 interface LoginForm {
   username: string;
@@ -18,13 +19,15 @@ interface LoginResponse {
       username: string;
       role: string;
     };
-    token: string;
+    accessToken: string;
+    refreshToken: string;
   };
 }
 
 export default function Login() {
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
 
   // 处理登录
   const handleLogin = async (values: LoginForm) => {
@@ -35,15 +38,15 @@ export default function Login() {
       const data: LoginResponse = response.data;
 
       if (data.success) {
-        // 保存 token 和用户信息
-        localStorage.setItem('token', data.data!.token);
+        // 使用 TokenManager 保存 token 和用户信息
+        TokenManager.setTokens(data.data!.accessToken, data.data!.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data!.user));
         
         message.success('登录成功！正在跳转...');
         
         // 延迟跳转到首页
         setTimeout(() => {
-          window.location.href = '/';
+          navigate('/shou');
         }, 1500);
       } else {
         message.error(data.message || '登录失败');
