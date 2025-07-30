@@ -1,20 +1,10 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
-
+import { createBrowserRouter } from 'react-router-dom'
 import Login from '../components/YSK/Login'
 import Shou from '../components/YSK/Shou'
+import IsLogin from '../utils/islogin'
 // 杨佳乐
 import Shoppdetail from '../components/yjl/shoppdetail'
 import Shopping from '../components/yjl/shopping'
-
-// 路由守卫
-const IsLogin = (props:any) => {
-    let Com = props.children.type
-    if (localStorage.getItem('token')) {
-        return <Com></Com>
-    } else {
-        return <Navigate to='/login'></Navigate>
-    }
-}
 
 
 const router = createBrowserRouter([
@@ -23,7 +13,7 @@ const router = createBrowserRouter([
         element: <Login />
     },
     {
-        path: '/list',
+        path: '/shou',
         element: <IsLogin><Shou /></IsLogin>
     },
     {
