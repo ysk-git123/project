@@ -2,7 +2,9 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import Login from '../components/YSK/Login'
 import Shou from '../components/YSK/Shou'
-
+// 杨佳乐
+import Shoppdetail from '../components/yjl/shoppdetail'
+import Shopping from '../components/yjl/shopping'
 
 // 路由守卫
 const IsLogin = (props:any) => {
@@ -27,7 +29,16 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <IsLogin><Shou /></IsLogin>
+    },
+    {
+        path:'/shoppdetail',
+        element:<Shoppdetail/>
+    },
+    {
+        path:'/shopping',
+        element:<Shopping/>
     }
+
 ])
 
 export default router
