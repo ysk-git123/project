@@ -24,6 +24,10 @@ const router = createBrowserRouter([
         path: '/list',
         element: <IsLogin><Shou /></IsLogin>
     },
+    {
+        path: '/',
+        element: <IsLogin><Shou /></IsLogin>
+    }
 ])
 
 export default router
