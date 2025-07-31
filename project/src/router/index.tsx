@@ -1,20 +1,16 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
 
+import { createBrowserRouter } from 'react-router-dom'
 import Login from '../components/YSK/Login'
 import Shou from '../components/YSK/Shou'
 import CategoryPage from '../components/YSK/CategoryPage'
-import { isAuthenticated } from '../utils/auth'
 
 
-// 路由守卫
-const IsLogin = (props:any) => {
-    let Com = props.children.type
-    if (isAuthenticated()) {
-        return <Com></Com>
-    } else {
-        return <Navigate to='/login'></Navigate>
-    }
-}
+import IsLogin from '../utils/islogin'
+
+
+// 杨佳乐
+import Shoppdetail from '../components/YJL/shoppdetail'
+import Shopping from '../components/YJL/shopping'
 
 
 const router = createBrowserRouter([
@@ -33,7 +29,16 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <IsLogin><Shou /></IsLogin>
+    },
+    {
+        path:'/shoppdetail',
+        element:<Shoppdetail/>
+    },
+    {
+        path:'/shopping',
+        element:<Shopping/>
     }
+
 ])
 
 export default router

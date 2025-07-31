@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   NavBar,
-  SearchBar,
   Swiper,
   Card,
   Image,
   Tag,
   List,
-  InfiniteScroll,
-  Toast,
   TabBar,
   Skeleton
 } from 'antd-mobile';
@@ -106,19 +103,32 @@ const categoryNames: Record<string, string> = {
   '家居服': '家居服',
 };
 
+// 全局缓存对象
+let homeCache: {
+  categories?: string[];
+  products?: Product[];
+} = {};
+
+// 新增：判断两个数组是否相等（浅比较即可）
+function shallowEqualArray<T>(a: T[] = [], b: T[] = []) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 export default function Shou() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(homeCache.products || []);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [categories, setCategories] = useState<string[]>(['all']);
+  const [categories, setCategories] = useState<string[]>(homeCache.categories || []);
   const [activeTab, setActiveTab] = useState('all'); // 默认选中"全部"
   const [currentPage, setCurrentPage] = useState(1); // 当前页码
   const pageSize = 10; // 每页数量
-  const [categoriesLoading, setCategoriesLoading] = useState(true); // 分类加载状态
-  const [productsLoading, setProductsLoading] = useState(true); // 商品加载状态
-  const [showSkeleton, setShowSkeleton] = useState(true); // 控制骨架屏显示
-  const [bannerLoading, setBannerLoading] = useState(true); // 轮播图加载状态
+  const [showSkeleton, setShowSkeleton] = useState(!homeCache.categories || !homeCache.products); // 控制骨架屏显示，默认不显示
+  const [updating, setUpdating] = useState(false); // 新增：局部更新 loading
 
   // 轮播图数据
   const bannerItems = [
@@ -130,87 +140,69 @@ export default function Shou() {
   // 获取分类
   const fetchCategories = async () => {
     try {
-      setCategoriesLoading(true);
       const response = await GET('/YSK/shop/categories');
       if (response.data.success) {
-        // 添加"全部"分类到最前面
-        const allCategories = ['all', ...response.data.data];
-        setCategories(allCategories);
-        console.log('获取到的分类:', allCategories);
+        return ['all', ...response.data.data];
       } else {
-        // 如果获取失败，使用默认分类
-        setCategories(['all', '短袖', '卫衣', '长袖', '外套']);
+        return ['all', '短袖', '卫衣', '长袖', '外套'];
       }
-    } catch (error) {
-      console.error('获取分类失败:', error);
-      // 使用默认分类作为备选
-      setCategories(['all', '短袖', '卫衣', '长袖', '外套']);
-    } finally {
-      // 延迟隐藏分类骨架屏
-      setTimeout(() => {
-        setCategoriesLoading(false);
-      }, 1500); // 延迟1.5秒
+    } catch {
+      return ['all', '短袖', '卫衣', '长袖', '外套'];
     }
   };
 
   // 获取商品数据
-  const fetchProducts = async (page = 1, isLoadMore = false) => {
+  const fetchProducts = async () => {
     try {
-      setLoading(true);
-      if (!isLoadMore) {
-        setProductsLoading(true);
-      }
-      const response = await GET(`/YSK/shop?page=${page}&pageSize=${pageSize}`);
+      const response = await GET(`/YSK/shop?page=1&pageSize=${pageSize}`);
       if (response.data.success) {
-        const { list, pagination } = response.data.data;
-
-        // 防御性检查：确保list是数组
-        const productsList = Array.isArray(list) ? list : [];
-
-        if (isLoadMore) {
-          // 加载更多时，追加数据
-          setProducts(prev => [...prev, ...productsList]);
-        } else {
-          // 首次加载或刷新时，替换数据
-          setProducts(productsList);
-        }
-
-        setCurrentPage(pagination.current);
-        setHasMore(pagination.hasMore);
-        console.log(`第${page}页商品数据:`, productsList);
+        const { list } = response.data.data;
+        return Array.isArray(list) ? list : [];
+      } else {
+        return [];
       }
-    } catch (error) {
-      console.error('获取商品失败:', error);
-      Toast.show('获取商品失败');
-    } finally {
-      setLoading(false);
-      // 延迟隐藏商品骨架屏
-      setTimeout(() => {
-        setProductsLoading(false);
-      }, 2000); // 延迟2秒
+    } catch {
+      return [];
     }
   };
 
-  // 触底加载更多
-  const loadMore = async () => {
-    if (loading || !hasMore) return;
-    await fetchProducts(currentPage + 1, true);
-  };
-
   useEffect(() => {
-    fetchCategories();
-    fetchProducts(1, false);
-    
-    // 设置轮播图骨架屏延迟
-    setTimeout(() => {
-      setBannerLoading(false);
-    }, 1000); // 轮播图延迟1秒
-    
-    // 设置初始骨架屏显示时间
-    const timer = setTimeout(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    // 1. 先用缓存渲染页面
+    if (homeCache.categories && homeCache.products) {
       setShowSkeleton(false);
-    }, 3000); // 初始显示3秒
-
+      setCategories(homeCache.categories);
+      setProducts(homeCache.products);
+      // 2. 后台静默拉取新数据
+      setUpdating(true);
+      Promise.all([fetchCategories(), fetchProducts()]).then(([cats, prods]) => {
+        setUpdating(false);
+        // 3. 如果新数据和缓存不同，平滑更新页面内容
+        let catsChanged = !shallowEqualArray(cats, homeCache.categories);
+        let prodsChanged = !shallowEqualArray(prods.map(p=>p._id), (homeCache.products||[]).map(p=>p._id));
+        if (catsChanged) {
+          setCategories(cats);
+          homeCache.categories = cats;
+        }
+        if (prodsChanged) {
+          setProducts(prods);
+          homeCache.products = prods;
+        }
+        // 可选：有变化时可加 Toast.show({ content: '内容已更新' });
+      });
+    } else {
+      // 首次加载，显示骨架屏
+      setShowSkeleton(true);
+      Promise.all([fetchCategories(), fetchProducts()]).then(([cats, prods]) => {
+        homeCache.categories = cats;
+        homeCache.products = prods;
+        timer = setTimeout(() => {
+          setCategories(cats);
+          setProducts(prods);
+          setShowSkeleton(false);
+        }, 2500);
+      });
+    }
     return () => clearTimeout(timer);
   }, []);
 
@@ -218,10 +210,12 @@ export default function Shou() {
   const handleCategoryClick = (category: string) => {
     setActiveTab(category); // 更新选中状态
     if (category === 'all') {
-      // 全部分类就在当前页面显示所有商品
       setCurrentPage(1); // 重置页码
       setHasMore(true); // 重置加载状态
-      fetchProducts(1, false);
+      // 从分类页面返回时，不显示骨架屏
+      if (!homeCache.categories || !homeCache.products) {
+        fetchProducts();
+      }
     } else {
       // 其他分类跳转到分类页面
       navigate(`/category/${encodeURIComponent(category)}`);
@@ -357,19 +351,8 @@ export default function Shou() {
         商城首页
       </NavBar>
 
-      {/* 搜索栏 */}
-      <div className={styles['search-container']}>
-        <SearchBar
-          placeholder="搜索商品"
-          style={{
-            '--border-radius': '100px',
-            '--background': '#f5f5f5',
-          }}
-        />
-      </div>
-
       {/* 轮播图 */}
-      {bannerLoading || showSkeleton ? (
+      {showSkeleton ? (
         <BannerSkeleton />
       ) : (
         <div className={styles['banner-container']}>
@@ -387,7 +370,7 @@ export default function Shou() {
       )}
 
       {/* 分类导航 */}
-      {categoriesLoading || showSkeleton ? (
+      {showSkeleton ? (
         <CategorySkeleton />
       ) : (
         <div className={styles['category-container']}>
@@ -440,7 +423,7 @@ export default function Shou() {
       )}
 
       {/* 商品列表 */}
-      {productsLoading || showSkeleton ? (
+      {showSkeleton ? (
         <ProductSkeleton />
       ) : (
         <div className={styles['products-container']}>
@@ -455,7 +438,6 @@ export default function Shou() {
                 </div>
               ))}
             </div>
-            <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
           </List>
         </div>
       )}
