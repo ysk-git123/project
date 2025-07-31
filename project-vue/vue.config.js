@@ -1,4 +1,10 @@
-const { defineConfig } = require('@vue/cli-service'); // eslint-disable-line @typescript-eslint/no-require-imports
-module.exports = defineConfig({
-  transpileDependencies: true,
-});
+/* eslint-disable @typescript-eslint/no-require-imports */
+const path = require('path');
+module.exports = {
+  // ... 其他原有配置
+  chainWebpack: (config) => {
+    config.resolve.set('extensions', ['.js', '.ts', '.vue', '.json']).set('alias', {
+      '@': path.resolve(__dirname, 'src'),
+    });
+  },
+};

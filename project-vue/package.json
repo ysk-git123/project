@@ -12,18 +12,27 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "vue": "^3.2.13"
+    "element-plus": "^2.10.4",
+    "vue": "^3.2.13",
+    "vue-router": "^4.5.1",
+    "vuex": "^4.0.2",
+    "vuex-persistedstate": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@element-plus/icons-vue": "^2.3.1",
+    "@types/vue-router": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-typescript": "^5.0.8",
     "@vue/cli-service": "~5.0.0",
+    "@vue/compiler-sfc": "^3.5.18",
+    "@vuedx/typescript-plugin-vue": "^0.7.6",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
@@ -32,7 +41,8 @@
     "lint-staged": "^15.5.2",
     "prettier": "^3.6.2",
     "sass": "^1.89.2",
-    "sass-loader": "^16.0.5"
+    "sass-loader": "^16.0.5",
+    "typescript": "^5.8.3"
   },
   "eslintConfig": {
     "root": true,
@@ -49,7 +59,7 @@
     "rules": {}
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,vue}":[
+    "*.{js,jsx,ts,tsx,vue}": [
       "eslint --fix",
       "prettier --write"
     ],

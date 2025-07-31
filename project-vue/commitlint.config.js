@@ -1,8 +1,3 @@
-// module.exports = {
-//   // 继承 Angular 规范（最常用的规范）
-//   extends: ['@commitlint/config-conventional'],
-// };
-
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
