@@ -6,6 +6,7 @@ import {
   Image,
   Tag,
   List,
+  InfiniteScroll,
   TabBar,
   Skeleton
 } from 'antd-mobile';
@@ -151,19 +152,34 @@ export default function Shou() {
     }
   };
 
-  // 获取商品数据
-  const fetchProducts = async () => {
+  // 支持分页的 fetchProducts
+  const fetchProducts = async (page = 1) => {
     try {
-      const response = await GET(`/YSK/shop?page=1&pageSize=${pageSize}`);
+      const response = await GET(`/YSK/shop?page=${page}&pageSize=${pageSize}`);
       if (response.data.success) {
-        const { list } = response.data.data;
-        return Array.isArray(list) ? list : [];
+        const { list, pagination } = response.data.data;
+        return {
+          list: Array.isArray(list) ? list : [],
+          hasMore: pagination?.hasMore ?? false
+        };
       } else {
-        return [];
+        return { list: [], hasMore: false };
       }
     } catch {
-      return [];
+      return { list: [], hasMore: false };
     }
+  };
+
+  // 触底加载更多
+  const loadMore = async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    const nextPage = currentPage + 1;
+    const { list: newList, hasMore: more } = await fetchProducts(nextPage);
+    setProducts(prev => [...prev, ...newList]);
+    setCurrentPage(nextPage);
+    setHasMore(more);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -175,30 +191,32 @@ export default function Shou() {
       setProducts(homeCache.products);
       // 2. 后台静默拉取新数据
       setUpdating(true);
-      Promise.all([fetchCategories(), fetchProducts()]).then(([cats, prods]) => {
+      Promise.all([fetchCategories(), fetchProducts(1)]).then(([cats, prodsRes]) => {
         setUpdating(false);
-        // 3. 如果新数据和缓存不同，平滑更新页面内容
         let catsChanged = !shallowEqualArray(cats, homeCache.categories);
-        let prodsChanged = !shallowEqualArray(prods.map(p=>p._id), (homeCache.products||[]).map(p=>p._id));
+        let prodsChanged = !shallowEqualArray(prodsRes.list.map(p => p._id), (homeCache.products || []).map(p => p._id));
         if (catsChanged) {
           setCategories(cats);
           homeCache.categories = cats;
         }
         if (prodsChanged) {
-          setProducts(prods);
-          homeCache.products = prods;
+          setProducts(prodsRes.list);
+          homeCache.products = prodsRes.list;
         }
-        // 可选：有变化时可加 Toast.show({ content: '内容已更新' });
+        setCurrentPage(1);
+        setHasMore(prodsRes.hasMore);
       });
     } else {
       // 首次加载，显示骨架屏
       setShowSkeleton(true);
-      Promise.all([fetchCategories(), fetchProducts()]).then(([cats, prods]) => {
+      Promise.all([fetchCategories(), fetchProducts(1)]).then(([cats, prodsRes]) => {
         homeCache.categories = cats;
-        homeCache.products = prods;
+        homeCache.products = prodsRes.list;
         timer = setTimeout(() => {
           setCategories(cats);
-          setProducts(prods);
+          setProducts(prodsRes.list);
+          setCurrentPage(1);
+          setHasMore(prodsRes.hasMore);
           setShowSkeleton(false);
         }, 2500);
       });
@@ -377,12 +395,12 @@ export default function Shou() {
           <div className={styles['category-scroll']}>
             <div className={styles['category-pages']}>
               {/* 计算需要多少页 */}
-              {Array.from({ length: Math.ceil(categories.length / 6) }, (_, pageIndex) => (
+              {Array.from({ length: Math.ceil(categories.length / 16) }, (_, pageIndex) => (
                 <div key={pageIndex} className={styles['category-page']}>
                   <div className={styles['category-grid']}>
                     {/* 第一行 */}
                     <div className={styles['category-row']}>
-                      {categories.slice(pageIndex * 6, pageIndex * 6 + 3).map((category) => (
+                      {categories.slice(pageIndex * 16, pageIndex * 16 + 8).map((category) => (
                         <div
                           key={category}
                           className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
@@ -399,7 +417,7 @@ export default function Shou() {
                     </div>
                     {/* 第二行 */}
                     <div className={styles['category-row']}>
-                      {categories.slice(pageIndex * 6 + 3, (pageIndex + 1) * 6).map((category) => (
+                      {categories.slice(pageIndex * 16 + 8, (pageIndex + 1) * 16).map((category) => (
                         <div
                           key={category}
                           className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
@@ -438,6 +456,7 @@ export default function Shou() {
                 </div>
               ))}
             </div>
+            <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
           </List>
         </div>
       )}

@@ -17,6 +17,11 @@ const shopSchema = mongoose.Schema({
     ],
     description: String,             // 商品描述
     category: String,                // 商品分类
+    createTime: {                    // 创建时间
+        type: Date,
+        default: Date.now
+    },
+    
 })
 
 const shopModel = mongoose.model('shop', shopSchema, 'shop')

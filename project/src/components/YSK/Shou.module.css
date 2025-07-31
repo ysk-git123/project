@@ -61,10 +61,11 @@
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 160px;
 }
 
 .category-scroll {
-  height: 120px;
+  height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -92,43 +93,45 @@
 .category-pages {
   display: flex;
   min-width: max-content;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
 }
 
 .category-page {
   flex-shrink: 0;
-  width: 50%;
-  max-width: 400px;
-  padding: 0 8px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
 }
 
 .category-grid {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 8px;
+  gap: 20px;
 }
 
 .category-row {
   display: flex;
   flex: 1;
-  gap: 8px;
+  gap: 16px;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .category-grid-item {
-  flex: 1;
+  width: 70px;
+  height: 80px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
-  border-radius: 8px;
+  padding: 10px 6px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   background: white;
   border: 1px solid transparent;
-  height: 50px;
 }
 
 .category-grid-item:hover {
@@ -142,18 +145,24 @@
 }
 
 .category-icon {
-  font-size: 18px;
-  color: #667eea;
-  margin-bottom: 4px;
-  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  font-size: 28px;
 }
 
 .category-title {
-  font-size: 10px;
+  font-size: 13px;
   color: #333;
   text-align: center;
   line-height: 1.2;
-  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 商品列表样式 */
@@ -175,18 +184,35 @@
 .product-card {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+  border: none;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.13);
 }
 
 .product-image {
-  position: relative;
+  background: #f3f3f3;
+  border-radius: 12px 12px 0 0;
   overflow: hidden;
+  margin-bottom: 0;
+  padding-top: 0;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image img,
+.product-image .adm-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+  background: #f3f3f3;
+  display: block;
 }
 
 .color-tag {
@@ -194,27 +220,34 @@
   top: 8px;
   right: 8px;
   font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  z-index: 2;
 }
 
 .product-info {
-  padding: 12px;
+  padding: 14px 12px 12px 12px;
 }
 
 .product-name {
   font-size: 14px;
+  color: #222;
   font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  min-height: 36px;
 }
 
 .product-price {
   font-size: 16px;
-  font-weight: 600;
-  color: #ff4757;
-  margin-bottom: 12px;
+  font-weight: bold;
+  color: #e4393c;
+  margin-bottom: 0;
 }
 
 .product-actions {
@@ -234,7 +267,8 @@
   }
 
   .product-name {
-    font-size: 12px;
+    font-size: 13px;
+    min-height: 32px;
   }
 
   .product-price {
@@ -254,6 +288,7 @@
   .category-grid-item {
     padding: 3px 2px;
     height: 40px;
+    width: 60px;
   }
 
   .category-icon {
