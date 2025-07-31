@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-var { userModel, roleModel, menuModel  } = require('../../database/Login')
+var { userModel, roleModel, menuModel } = require('../../database/Login')
 var { shopModel } = require('../../database/shop')
 var JWT = require('jsonwebtoken')
 
@@ -153,11 +153,120 @@ router.post('/refresh', async (req, res) => {
 // 获取商品列表
 router.get('/shop', async (req, res) => {
     try {
-        const data = await shopModel.find().sort({ _id: -1 });
+        const { category, page = 1, pageSize = 10 } = req.query;
+        let query = {};
+
+        // 如果指定了分类，添加分类筛选条件
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+
+        // 计算分页参数
+        const skip = (parseInt(page) - 1) * parseInt(pageSize);
+        const limit = parseInt(pageSize);
+
+        // 查询总数
+        const total = await shopModel.countDocuments(query);
+
+        // 查询分页数据
+        const data = await shopModel.find(query)
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limit);
+
         res.json({
             success: true,
             message: '获取商品成功',
-            data
+            data: {
+                list: data,
+                pagination: {
+                    current: parseInt(page),
+                    pageSize: parseInt(pageSize),
+                    total: total,
+                    hasMore: skip + data.length < total
+                }
+            }
+        });
+    } catch (error) {
+        console.error('获取商品错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取商品失败'
+        });
+    }
+});
+
+
+// 获取商品分类
+router.get('/shop/categories', async (req, res) => {
+    try {
+        // 获取所有不重复的分类
+        const categories = await shopModel.distinct('category');
+
+        // 过滤掉空值和undefined
+        const validCategories = categories.filter(cat => cat && cat.trim() !== '');
+
+        // 按字母顺序排序
+        const sortedCategories = validCategories.sort();
+
+        console.log('获取到的分类:', sortedCategories);
+
+        res.json({
+            success: true,
+            message: '获取分类成功',
+            data: sortedCategories
+        });
+    } catch (error) {
+        console.error('获取分类错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取分类失败'
+        });
+    }
+});
+
+// 获取商品列表
+router.get('/shop', async (req, res) => {
+    try {
+        const { category, page = 1, pageSize = 10 } = req.query;
+        let query = {};
+
+        // 如果指定了分类，添加分类筛选条件
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+
+        // 计算分页参数
+        const skip = (parseInt(page) - 1) * parseInt(pageSize);
+        const limit = parseInt(pageSize);
+
+        // 查询总数
+        const total = await shopModel.countDocuments(query);
+
+        // 查询分页数据
+        const data = await shopModel.find(query)
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // 添加调试日志
+        console.log('=== 商品查询信息 ===');
+        console.log('请求参数:', { category, page, pageSize });
+        console.log('查询条件:', query);
+        console.log('查询结果:', { total, dataLength: data.length });
+
+        res.json({
+            success: true,
+            message: '获取商品成功',
+            data: {
+                list: data,
+                pagination: {
+                    current: parseInt(page),
+                    pageSize: parseInt(pageSize),
+                    total: total,
+                    hasMore: skip + data.length < total
+                }
+            }
         });
     } catch (error) {
         console.error('获取商品错误:', error);
@@ -171,34 +280,34 @@ router.get('/shop', async (req, res) => {
 // 添加商品
 router.post('/shop', async (req, res) => {
     try {
-        const { name, img, price, color, size, description, category } = req.body;
-        
+        const { name, image, price, color, size, description, category } = req.body;
+
         // 验证必填字段
-        if (!name || !img || !price || !category) {
+        if (!name || !image || !price || !category) {
             return res.status(400).json({
                 success: false,
                 message: '商品名称、图片、价格和分类为必填项'
             });
         }
-        
+
         const newShop = new shopModel({
             name,
-            img,
+            image,
             price: parseFloat(price),
             color: color || [],
             size: size || [],
             description,
             category
         });
-        
+
         await newShop.save();
-        
+
         res.status(201).json({
             success: true,
             message: '添加商品成功',
             data: newShop
         });
-        
+
     } catch (error) {
         console.error('添加商品错误:', error);
         res.status(500).json({
