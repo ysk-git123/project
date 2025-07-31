@@ -194,6 +194,7 @@ export default function Shou() {
       Promise.all([fetchCategories(), fetchProducts(1)]).then(([cats, prodsRes]) => {
         setUpdating(false);
         let catsChanged = !shallowEqualArray(cats, homeCache.categories);
+
         let prodsChanged = !shallowEqualArray(prodsRes.list.map(p => p._id), (homeCache.products || []).map(p => p._id));
         if (catsChanged) {
           setCategories(cats);
@@ -346,7 +347,9 @@ export default function Shou() {
 
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
-    <Card className={styles['product-card']}>
+    <Card className={styles['product-card']} onClick={() => {
+      navigate(`/shoppdetail?id=${product._id}`)
+    }}>
       <div className={styles['product-image']}>
         <Image src={product.image} width="100%" height={200} fit="cover" />
         {product.color.length > 0 && (

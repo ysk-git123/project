@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './shopping.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { GET } from '../../Axios/api';
+
 const Shopping: React.FC = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const id = searchParams.get('id');
+    const getdata = async () => {
+        const response = await GET(`/YSK/shop`);
+        console.log(response.data.data.list)
+        const product = response.data.data.list.find((item: any) => item._id === id);
+        console.log(product)
+        setOrderItems(product)
+    }
+    useEffect(() => {
+        getdata()
+    }, [])
     // 示例订单数据
-    const [orderItems] = useState([
-        {
-            id: 1,
-            name: '女童经典长款中厚羽绒服-宝石紫',
-            color: '红色',
-            size: 'XL',
-            price: 239,
-            quantity: 1,
-            image: './2.jpeg'
-        }
-    ]);
+    const [orderItems, setOrderItems] = useState<any>([]);
 
     // 数量控制（如果需要统一控制所有商品数量）
     const [quantity, setQuantity] = useState(1);

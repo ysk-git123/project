@@ -3,7 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import Login from '../components/YSK/Login'
 import Shou from '../components/YSK/Shou'
 import CategoryPage from '../components/YSK/CategoryPage'
-
+import Cart from '../components/YJL/cart'
 
 import IsLogin from '../utils/islogin'
 
@@ -37,6 +37,10 @@ const router = createBrowserRouter([
     {
         path:'/shopping',
         element:<Shopping/>
+    },
+    {
+        path:'/cart',
+        element:<Cart/>
     }
 
 ])
