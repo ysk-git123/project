@@ -179,7 +179,7 @@ export default function Shou() {
         setUpdating(false);
         // 3. 如果新数据和缓存不同，平滑更新页面内容
         let catsChanged = !shallowEqualArray(cats, homeCache.categories);
-        let prodsChanged = !shallowEqualArray(prods.map(p=>p._id), (homeCache.products||[]).map(p=>p._id));
+        let prodsChanged = !shallowEqualArray(prods.map(p => p._id), (homeCache.products || []).map(p => p._id));
         if (catsChanged) {
           setCategories(cats);
           homeCache.categories = cats;
@@ -328,7 +328,9 @@ export default function Shou() {
 
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
-    <Card className={styles['product-card']}>
+    <Card className={styles['product-card']} onClick={() => {
+      navigate(`/shoppdetail?id=${product._id}`)
+    }}>
       <div className={styles['product-image']}>
         <Image src={product.image} width="100%" height={200} fit="cover" />
         {product.color.length > 0 && (
