@@ -7,31 +7,18 @@ import {
   Tag,
   List,
   InfiniteScroll,
-  TabBar,
   Skeleton,
-  Avatar,
-  Button,
-  Toast
 } from 'antd-mobile';
 import {
   PayCircleOutline,
-  UserOutline,
   FireFill,
   GiftOutline,
   StarOutline,
-  AppOutline,
-  UnorderedListOutline,
-  RightOutline,
-  TruckOutline,
-  LocationOutline,
-  HeartOutline,
-  SearchOutline,
-  MessageOutline,
-  SetOutline
 } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import { GET } from '../../Axios/api';
 import styles from './ModuleCSS/Shou.module.css'
+import TabBar from './TabBar';
 
 interface Product {
   _id: string;
@@ -39,8 +26,6 @@ interface Product {
   image: string;
   price: number;
   color: string[];
-  // size: string[];
-  // description: string;
   category: string;
 }
 
@@ -140,9 +125,6 @@ export default function Shou() {
   const pageSize = 10; // 每页数量
   const [showSkeleton, setShowSkeleton] = useState(!homeCache.categories || !homeCache.products); // 控制骨架屏显示，默认不显示
   const [updating, setUpdating] = useState(false); // 新增：局部更新 loading
-
-  // 新增：底部标签栏状态
-  const [activeBottomTab, setActiveBottomTab] = useState('home'); // 底部标签栏当前选中的标签
 
   // 轮播图数据
   const bannerItems = [
@@ -254,368 +236,6 @@ export default function Shou() {
     }
   };
 
-  // 新增：处理底部标签栏点击
-  const handleBottomTabClick = (key: string) => {
-    setActiveBottomTab(key);
-  };
-
-  // 新增：渲染不同标签页的内容
-  const renderTabContent = () => {
-    switch (activeBottomTab) {
-      case 'home':
-      case 'categories':
-        return (
-          <>
-            {/* 轮播图 */}
-            {showSkeleton ? (
-              <BannerSkeleton />
-            ) : (
-              <div className={styles['banner-container']}>
-                <Swiper autoplay loop>
-                  {bannerItems.map((item) => (
-                    <Swiper.Item key={item.id}>
-                      <div className={styles['banner-item']}>
-                        <Image src={item.image} width="100%" height={150} fit="cover" />
-                        <div className={styles['banner-title']}>{item.title}</div>
-                      </div>
-                    </Swiper.Item>
-                  ))}
-                </Swiper>
-              </div>
-            )}
-
-            {/* 分类导航 */}
-            {showSkeleton ? (
-              <CategorySkeleton />
-            ) : (
-              <div className={styles['category-container']}>
-                <div className={styles['category-scroll']}>
-                  <div className={styles['category-pages']}>
-                    {/* 计算需要多少页 */}
-                    {Array.from({ length: Math.ceil(categories.length / 16) }, (_, pageIndex) => (
-                      <div key={pageIndex} className={styles['category-page']}>
-                        <div className={styles['category-grid']}>
-                          {/* 第一行 */}
-                          <div className={styles['category-row']}>
-                            {categories.slice(pageIndex * 16, pageIndex * 16 + 8).map((category) => (
-                              <div
-                                key={category}
-                                className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
-                                onClick={() => handleCategoryClick(category)}
-                              >
-                                <div className={styles['category-icon']}>
-                                  {getCategoryIcon(category)}
-                                </div>
-                                <div className={styles['category-title']}>
-                                  {getCategoryDisplayName(category)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {/* 第二行 */}
-                          <div className={styles['category-row']}>
-                            {categories.slice(pageIndex * 16 + 8, (pageIndex + 1) * 16).map((category) => (
-                              <div
-                                key={category}
-                                className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
-                                onClick={() => handleCategoryClick(category)}
-                              >
-                                <div className={styles['category-icon']}>
-                                  {getCategoryIcon(category)}
-                                </div>
-                                <div className={styles['category-title']}>
-                                  {getCategoryDisplayName(category)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 商品列表 */}
-            {showSkeleton ? (
-              <ProductSkeleton />
-            ) : (
-              <div className={styles['products-container']}>
-                <List>
-                  <div className={styles['products-grid']}>
-                    {products.length === 0 && !loading && (
-                      <div className={styles['empty-container']}>暂无商品</div>
-                    )}
-                    {products.map((product) => (
-                      <div key={product._id} className={styles['product-item']}>
-                        <ProductCard product={product} />
-                      </div>
-                    ))}
-                  </div>
-                  <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
-                </List>
-              </div>
-            )}
-          </>
-        );
-      case 'cart':
-        return (
-          <div className={styles.cartContent}>
-            {/* 购物车头部 */}
-            <div className={styles.cartHeader}>
-              <h2>购物车</h2>
-              <Button
-                color='danger'
-                size='small'
-                onClick={() => {
-                  Toast.show('清空购物车');
-                }}
-              >
-                清空购物车
-              </Button>
-            </div>
-
-            {/* 购物车商品列表 */}
-            <div className={styles.cartItems}>
-              {/* 商品项1 */}
-              <div className={styles.cartItem}>
-                <div className={styles.cartItemImage}>
-                  <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150"
-                    width={80}
-                    height={80}
-                    fit="cover"
-                  />
-                </div>
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>高腰A字牛仔连衣裙</div>
-                  <div className={styles.cartItemPrice}>¥149.9</div>
-                  <div className={styles.cartItemAttr}>颜色: 深蓝 | 尺码: M</div>
-                  <div className={styles.cartItemSubtotal}>¥299.80</div>
-                </div>
-                <div className={styles.cartItemActions}>
-                  <div className={styles.quantityControl}>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('减少数量');
-                      }}
-                    >
-                      -
-                    </Button>
-                    <span className={styles.quantity}>2</span>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('增加数量');
-                      }}
-                    >
-                      +
-                    </Button>
-                  </div>
-                  <Button
-                    color='danger'
-                    size='small'
-                    onClick={() => {
-                      Toast.show('删除商品');
-                    }}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </div>
-
-              {/* 商品项2 */}
-              <div className={styles.cartItem}>
-                <div className={styles.cartItemImage}>
-                  <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150"
-                    width={80}
-                    height={80}
-                    fit="cover"
-                  />
-                </div>
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>高腰A字牛仔连衣裙</div>
-                  <div className={styles.cartItemPrice}>¥149.9</div>
-                  <div className={styles.cartItemAttr}>颜色: 深蓝 | 尺码: L</div>
-                  <div className={styles.cartItemSubtotal}>¥299.80</div>
-                </div>
-                <div className={styles.cartItemActions}>
-                  <div className={styles.quantityControl}>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('减少数量');
-                      }}
-                    >
-                      -
-                    </Button>
-                    <span className={styles.quantity}>2</span>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('增加数量');
-                      }}
-                    >
-                      +
-                    </Button>
-                  </div>
-                  <Button
-                    color='danger'
-                    size='small'
-                    onClick={() => {
-                      Toast.show('删除商品');
-                    }}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* 购物车底部 */}
-            <div className={styles.cartFooter}>
-              <div className={styles.cartSummary}>
-                <div className={styles.cartTotalItems}>共4件商品</div>
-                <div className={styles.cartTotalPrice}>总计: ¥599.60</div>
-              </div>
-              <Button
-                color='primary'
-                size='large'
-                block
-                onClick={() => {
-                  Toast.show('去结算');
-                }}
-              >
-                去结算
-              </Button>
-            </div>
-          </div>
-        );
-      case 'mine':
-        return (
-          <div className={styles.mineContent}>
-            {/* 用户信息卡片 */}
-            <Card className={styles.userCard}>
-              <div className={styles.userInfo}>
-                <Avatar
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
-                  className={styles.avatar}
-                />
-                <div className={styles.userDetails}>
-                  <div className={styles.userName}>张三</div>
-                  <div className={styles.userPhone}>138****8888</div>
-                  <div className={styles.userLevel}>
-                    <Tag color='primary'>VIP会员</Tag>
-                    <span className={styles.points}>积分: 2580</span>
-                  </div>
-                </div>
-                <Button
-                  size='small'
-                  className={styles.editBtn}
-                  onClick={() => {
-                    Toast.show('编辑个人信息');
-                  }}
-                >
-                  编辑
-                </Button>
-              </div>
-            </Card>
-
-            {/* 订单统计 */}
-            <Card className={styles.orderCard}>
-              <div className={styles.orderHeader}>
-                <span className={styles.orderTitle}>我的订单</span>
-                <div className={styles.orderMore}>
-                  <span>查看全部</span>
-                  <RightOutline />
-                </div>
-              </div>
-              <div className={styles.orderStats}>
-                {[
-                  { title: '我的订单', icon: <UnorderedListOutline />, badge: 6 },
-                  { title: '待付款', icon: <PayCircleOutline />, badge: 2 },
-                  { title: '待发货', icon: <TruckOutline />, badge: 1 },
-                  { title: '待收货', icon: <GiftOutline />, badge: 3 }
-                ].map((item, index) => (
-                  <div key={index} className={styles.orderItem}>
-                    <div className={styles.orderIcon}>
-                      {item.icon}
-                      {item.badge > 0 && (
-                        <span className={styles.badge}>{item.badge}</span>
-                      )}
-                    </div>
-                    <span className={styles.orderText}>{item.title}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* 服务功能 */}
-            <Card className={styles.serviceCard}>
-              <div className={styles.serviceHeader}>
-                <span className={styles.serviceTitle}>服务功能</span>
-              </div>
-              <div className={styles.serviceGrid}>
-                {[
-                  { title: '收货地址', icon: <LocationOutline /> },
-                  { title: '我的收藏', icon: <HeartOutline /> },
-                  { title: '客服中心', icon: <SearchOutline /> },
-                  { title: '意见反馈', icon: <MessageOutline /> }
-                ].map((item, index) => (
-                  <div key={index} className={styles.serviceItem}>
-                    <div className={styles.serviceIcon}>{item.icon}</div>
-                    <span className={styles.serviceText}>{item.title}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* 设置选项 */}
-            <Card className={styles.settingCard}>
-              <List>
-                {[
-                  { title: '账户设置', icon: <SetOutline /> },
-                  { title: '隐私设置', icon: <SetOutline /> }
-                ].map((item, index) => (
-                  <List.Item
-                    key={index}
-                    prefix={item.icon}
-                    onClick={() => Toast.show(`跳转到${item.title}`)}
-                    arrow={<RightOutline />}
-                  >
-                    {item.title}
-                  </List.Item>
-                ))}
-              </List>
-            </Card>
-
-            {/* 退出登录 */}
-            <div className={styles.logoutContainer}>
-              <Button
-                block
-                color='danger'
-                className={styles.logoutBtn}
-                onClick={() => {
-                  Toast.show('退出登录');
-                }}
-              >
-                退出登录
-              </Button>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   // 获取分类显示名称
   const getCategoryDisplayName = (category: string) => {
     if (category === 'all') return '全部';
@@ -643,7 +263,6 @@ export default function Shou() {
     }
   };
 
-
   // 分类骨架屏组件
   const CategorySkeleton = () => (
     <div className={styles['category-container']}>
@@ -653,7 +272,7 @@ export default function Shou() {
             <div className={styles['category-grid']}>
               {/* 第一行骨架屏 */}
               <div className={styles['category-row']}>
-                {Array.from({ length: 3 }, (_, index) => (
+                {Array.from({ length: 8 }, (_, index) => (
                   <div key={index} className={styles['category-grid-item']}>
                     <div className={styles['category-icon']}>
                       <Skeleton.Title animated style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
@@ -666,8 +285,8 @@ export default function Shou() {
               </div>
               {/* 第二行骨架屏 */}
               <div className={styles['category-row']}>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <div key={index + 3} className={styles['category-grid-item']}>
+                {Array.from({ length: 8 }, (_, index) => (
+                  <div key={index + 8} className={styles['category-grid-item']}>
                     <div className={styles['category-icon']}>
                       <Skeleton.Title animated style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
                     </div>
@@ -723,7 +342,8 @@ export default function Shou() {
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
     <Card className={styles['product-card']} onClick={() => {
-      navigate(`/shoppdetail?id=${product._id}`)
+      console.log('跳转到商品详情，商品:', product);
+      navigate(`/shoppdetail`, { state: { product: product } })
     }}>
       <div className={styles['product-image']}>
         <Image src={product.image} width="100%" height={200} fit="cover" />
@@ -747,36 +367,100 @@ export default function Shou() {
         商城首页
       </NavBar>
 
-      {/* 渲染不同标签页的内容 */}
-      {renderTabContent()}
+      {/* 轮播图 */}
+      {showSkeleton ? (
+        <BannerSkeleton />
+      ) : (
+        <div className={styles['banner-container']}>
+          <Swiper autoplay loop>
+            {bannerItems.map((item) => (
+              <Swiper.Item key={item.id}>
+                <div className={styles['banner-item']}>
+                  <Image src={item.image} width="100%" height={150} fit="cover" />
+                  <div className={styles['banner-title']}>{item.title}</div>
+                </div>
+              </Swiper.Item>
+            ))}
+          </Swiper>
+        </div>
+      )}
+
+      {/* 分类导航 */}
+      {showSkeleton ? (
+        <CategorySkeleton />
+      ) : (
+        <div className={styles['category-container']}>
+          <div className={styles['category-scroll']}>
+            <div className={styles['category-pages']}>
+              {/* 计算需要多少页 */}
+              {Array.from({ length: Math.ceil(categories.length / 16) }, (_, pageIndex) => (
+                <div key={pageIndex} className={styles['category-page']}>
+                  <div className={styles['category-grid']}>
+                    {/* 第一行 */}
+                    <div className={styles['category-row']}>
+                      {categories.slice(pageIndex * 16, pageIndex * 16 + 8).map((category) => (
+                        <div
+                          key={category}
+                          className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
+                          onClick={() => handleCategoryClick(category)}
+                        >
+                          <div className={styles['category-icon']}>
+                            {getCategoryIcon(category)}
+                          </div>
+                          <div className={styles['category-title']}>
+                            {getCategoryDisplayName(category)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* 第二行 */}
+                    <div className={styles['category-row']}>
+                      {categories.slice(pageIndex * 16 + 8, (pageIndex + 1) * 16).map((category) => (
+                        <div
+                          key={category}
+                          className={`${styles['category-grid-item']} ${activeTab === category ? styles.active : ''}`}
+                          onClick={() => handleCategoryClick(category)}
+                        >
+                          <div className={styles['category-icon']}>
+                            {getCategoryIcon(category)}
+                          </div>
+                          <div className={styles['category-title']}>
+                            {getCategoryDisplayName(category)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 商品列表 */}
+      {showSkeleton ? (
+        <ProductSkeleton />
+      ) : (
+        <div className={styles['products-container']}>
+          <List>
+            <div className={styles['products-grid']}>
+              {products.length === 0 && !loading && (
+                <div className={styles['empty-container']}>暂无商品</div>
+              )}
+              {products.map((product) => (
+                <div key={product._id} className={styles['product-item']}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+            <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
+          </List>
+        </div>
+      )}
 
       {/* 底部标签栏 */}
-      <TabBar
-        className={styles['tab-bar']}
-        activeKey={activeBottomTab}
-        onChange={handleBottomTabClick}
-      >
-        <TabBar.Item
-          key="home"
-          icon={<AppOutline />}
-          title="首页"
-        />
-        <TabBar.Item
-          key="categories"
-          icon={<UnorderedListOutline />}
-          title="分类"
-        />
-        <TabBar.Item
-          key="cart"
-          icon={<GiftOutline />}
-          title="购物车"
-        />
-        <TabBar.Item
-          key="mine"
-          icon={<UserOutline />}
-          title="我的"
-        />
-      </TabBar>
+      <TabBar />
     </div>
   );
 }
