@@ -448,11 +448,11 @@
         align-items: flex-start;
     }
     
-    /* .checkout-btn {
+    .checkout-btn {
         margin-left: 0;
         width: 100%;
         padding: 15px;
-    } */
+    }
 }
 
 /* 添加一些动画效果 */

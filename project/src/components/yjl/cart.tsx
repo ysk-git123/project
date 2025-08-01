@@ -2,8 +2,6 @@ import React from 'react';
 import { useCart, getCartItemKey } from '../../utils/CartContext';
 import { useNavigate } from 'react-router-dom';
 import './cart.css';
-import { TabBar } from 'antd-mobile';
-import { AppOutline, UnorderedListOutline, GiftOutline, UserOutline } from 'antd-mobile-icons';
 
 const Cart: React.FC = () => {
     const { state, removeItem, getTotalPrice } = useCart();
@@ -111,35 +109,6 @@ const Cart: React.FC = () => {
                     </div>
                 </>
             )}
-            {/* 底部标签栏 */}
-            <TabBar
-                className="bottom-tab-bar"
-                activeKey="cart"
-            >
-                <TabBar.Item
-                    key="home"
-                    icon={<AppOutline />}
-                    title="首页"
-                    onClick={() => navigate('/shou')}
-                />
-                <TabBar.Item
-                    key="categories"
-                    icon={<UnorderedListOutline />}
-                    title="分类"
-                    onClick={() => navigate('/shou')}
-                />
-                <TabBar.Item
-                    key="cart"
-                    icon={<GiftOutline />}
-                    title="购物车"
-                />
-                <TabBar.Item
-                    key="mine"
-                    icon={<UserOutline />}
-                    title="我的"
-                    onClick={() => navigate('/shou')}
-                />
-            </TabBar>
         </div>
 
     );

@@ -89,7 +89,13 @@ export default function CategoryPage() {
 
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
-    <Card className={styles['product-card']}>
+    <Card 
+      className={styles['product-card']}
+      onClick={() => {
+        console.log('跳转到商品详情，商品:', product);
+        navigate(`/shoppdetail`, { state: { product: product } });
+      }}
+    >
       <div className={styles['product-image']}>
         <Image src={product.image} width="100%" height={200} fit="cover" />
         {product.color.length > 0 && (
