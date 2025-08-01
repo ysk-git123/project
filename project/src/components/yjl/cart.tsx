@@ -1,34 +1,53 @@
 import React from 'react';
 import { useCart, getCartItemKey } from '../../utils/CartContext';
+import { useNavigate } from 'react-router-dom';
 import './cart.css';
+import { TabBar } from 'antd-mobile';
+import { AppOutline, UnorderedListOutline, GiftOutline, UserOutline } from 'antd-mobile-icons';
 
 const Cart: React.FC = () => {
-    const { state, removeItem, updateQuantity, getTotalPrice, clearCart } = useCart();
-
-    const handleQuantityChange = (itemKey: string, newQuantity: number) => {
-        if (newQuantity > 0) {
-            updateQuantity(itemKey, newQuantity);
-        }
-    };
+    const { state, removeItem, getTotalPrice } = useCart();
+    const navigate = useNavigate();
 
     const handleRemoveItem = (itemKey: string) => {
         removeItem(itemKey);
     };
 
-    const handleClearCart = () => {
-        clearCart();
+    const handleCheckout = () => {
+        if (state.items.length === 0) {
+            alert('购物车为空，无法结算');
+            return;
+        }
+        
+        // 将购物车商品转换为订单格式
+        const orderItems = state.items.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            color: item.color,
+            size: item.size,
+            quantity: item.quantity
+        }));
+        
+        // 跳转到结算页面，传递购物车数据
+        navigate('/shopping', {
+            state: {
+                orderItems: orderItems,
+                fromCart: true // 标记来自购物车
+            }
+        });
     };
 
     return (
         <div className="cart-container">
-            {/* 头部 */}
-            <div className="cart-header">
-                <h1>购物车</h1>
-                {state.items.length > 0 && (
-                    <button className="clear-cart-btn" onClick={handleClearCart}>
-                        清空购物车
-                    </button>
-                )}
+            {/* 头部导航 */}
+            <div className="cart-nav-header">
+                <div className="nav-back-btn" onClick={() => navigate(-1)}>
+                    返回
+                </div>
+                <div className="nav-title">购物车</div>
+                <div className="nav-placeholder"></div>
             </div>
 
             {/* 购物车内容 */}
@@ -53,25 +72,14 @@ const Cart: React.FC = () => {
                                         <h3 className="item-name">{item.name}</h3>
                                         <p className="item-price">¥{item.price}</p>
                                         <p className="item-specs">
-                                            颜色: {item.color} | 尺码: {item.size}
+                                            颜色: {item.color} | 尺码: {item.size} | 数量: {item.quantity}
                                         </p>
                                     </div>
                                     <div className="item-actions">
                                         <div className="quantity-controls">
-                                            <button 
-                                                onClick={() => handleQuantityChange(itemKey, item.quantity - 1)}
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                -
-                                            </button>
-                                            <span className="quantity">{item.quantity}</span>
-                                            <button 
-                                                onClick={() => handleQuantityChange(itemKey, item.quantity + 1)}
-                                            >
-                                                +
-                                            </button>
+                                        
                                         </div>
-                                        <button 
+                                        <button
                                             className="remove-btn"
                                             onClick={() => handleRemoveItem(itemKey)}
                                         >
@@ -94,10 +102,46 @@ const Cart: React.FC = () => {
                                 <span className="total-price">总计: ¥{getTotalPrice().toFixed(2)}</span>
                             </div>
                         </div>
+                        <button 
+                            className="checkout-btn"
+                            onClick={handleCheckout}
+                        >
+                            结算
+                        </button>
                     </div>
                 </>
             )}
+            {/* 底部标签栏 */}
+            <TabBar
+                className="bottom-tab-bar"
+                activeKey="cart"
+            >
+                <TabBar.Item
+                    key="home"
+                    icon={<AppOutline />}
+                    title="首页"
+                    onClick={() => navigate('/shou')}
+                />
+                <TabBar.Item
+                    key="categories"
+                    icon={<UnorderedListOutline />}
+                    title="分类"
+                    onClick={() => navigate('/shou')}
+                />
+                <TabBar.Item
+                    key="cart"
+                    icon={<GiftOutline />}
+                    title="购物车"
+                />
+                <TabBar.Item
+                    key="mine"
+                    icon={<UserOutline />}
+                    title="我的"
+                    onClick={() => navigate('/shou')}
+                />
+            </TabBar>
         </div>
+
     );
 };
 

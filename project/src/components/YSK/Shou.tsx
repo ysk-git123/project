@@ -359,145 +359,6 @@ export default function Shou() {
             )}
           </>
         );
-      case 'cart':
-        return (
-          <div className={styles.cartContent}>
-            {/* 购物车头部 */}
-            <div className={styles.cartHeader}>
-              <h2>购物车</h2>
-              <Button
-                color='danger'
-                size='small'
-                onClick={() => {
-                  Toast.show('清空购物车');
-                }}
-              >
-                清空购物车
-              </Button>
-            </div>
-
-            {/* 购物车商品列表 */}
-            <div className={styles.cartItems}>
-              {/* 商品项1 */}
-              <div className={styles.cartItem}>
-                <div className={styles.cartItemImage}>
-                  <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150"
-                    width={80}
-                    height={80}
-                    fit="cover"
-                  />
-                </div>
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>高腰A字牛仔连衣裙</div>
-                  <div className={styles.cartItemPrice}>¥149.9</div>
-                  <div className={styles.cartItemAttr}>颜色: 深蓝 | 尺码: M</div>
-                  <div className={styles.cartItemSubtotal}>¥299.80</div>
-                </div>
-                <div className={styles.cartItemActions}>
-                  <div className={styles.quantityControl}>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('减少数量');
-                      }}
-                    >
-                      -
-                    </Button>
-                    <span className={styles.quantity}>2</span>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('增加数量');
-                      }}
-                    >
-                      +
-                    </Button>
-                  </div>
-                  <Button
-                    color='danger'
-                    size='small'
-                    onClick={() => {
-                      Toast.show('删除商品');
-                    }}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </div>
-
-              {/* 商品项2 */}
-              <div className={styles.cartItem}>
-                <div className={styles.cartItemImage}>
-                  <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150"
-                    width={80}
-                    height={80}
-                    fit="cover"
-                  />
-                </div>
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>高腰A字牛仔连衣裙</div>
-                  <div className={styles.cartItemPrice}>¥149.9</div>
-                  <div className={styles.cartItemAttr}>颜色: 深蓝 | 尺码: L</div>
-                  <div className={styles.cartItemSubtotal}>¥299.80</div>
-                </div>
-                <div className={styles.cartItemActions}>
-                  <div className={styles.quantityControl}>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('减少数量');
-                      }}
-                    >
-                      -
-                    </Button>
-                    <span className={styles.quantity}>2</span>
-                    <Button
-                      size='mini'
-                      color='primary'
-                      onClick={() => {
-                        Toast.show('增加数量');
-                      }}
-                    >
-                      +
-                    </Button>
-                  </div>
-                  <Button
-                    color='danger'
-                    size='small'
-                    onClick={() => {
-                      Toast.show('删除商品');
-                    }}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* 购物车底部 */}
-            <div className={styles.cartFooter}>
-              <div className={styles.cartSummary}>
-                <div className={styles.cartTotalItems}>共4件商品</div>
-                <div className={styles.cartTotalPrice}>总计: ¥599.60</div>
-              </div>
-              <Button
-                color='primary'
-                size='large'
-                block
-                onClick={() => {
-                  Toast.show('去结算');
-                }}
-              >
-                去结算
-              </Button>
-            </div>
-          </div>
-        );
       case 'mine':
         return (
           <div className={styles.mineContent}>
@@ -723,7 +584,8 @@ export default function Shou() {
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
     <Card className={styles['product-card']} onClick={() => {
-      navigate(`/shoppdetail?id=${product._id}`)
+      console.log('跳转到商品详情，商品:', product);
+      navigate(`/shoppdetail`, { state: { product: product} })
     }}>
       <div className={styles['product-image']}>
         <Image src={product.image} width="100%" height={200} fit="cover" />
@@ -770,6 +632,9 @@ export default function Shou() {
           key="cart"
           icon={<GiftOutline />}
           title="购物车"
+          onClick={() => {
+            navigate(`/cart`);
+          }}
         />
         <TabBar.Item
           key="mine"

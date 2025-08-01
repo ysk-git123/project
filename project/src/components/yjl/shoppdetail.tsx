@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './shoppdetail.css';
-import { GET } from '../../Axios/api'
-import { useSearchParams } from 'react-router-dom';
 import { useCart } from '../../utils/CartContext';
 import type { CartItem } from '../../utils/CartContext';
 
@@ -18,11 +16,13 @@ interface ShopData {
 }
 
 const Shoppdetail: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const id = searchParams.get('id');
-    console.log(id)
+    const location = useLocation();
     const navigate = useNavigate();
     const { addItem } = useCart();
+    
+    // 从location.state中获取完整的商品数据
+    const productData = location.state?.product;
+    console.log('接收到的商品数据:', productData);
     
     const services = [
         "满100元包邮",
@@ -31,26 +31,27 @@ const Shoppdetail: React.FC = () => {
         "7天无理由退货"
     ];
     
-    const getdata = async () => {
-        const response = await GET(`/YSK/shop`);
-        console.log(response.data.data.list)
-        const product = response.data.data.list.find((item: ShopData) => item._id === id);
-        console.log(product)
-        setShopData(product)
-    }
-    
-    useEffect(() => {
-        getdata()
-    }, [])
-    
     // 状态管理
     const [isCollected, setIsCollected] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
-    const [ShopData, setShopData] = useState<ShopData | null>(null);
+    const [ShopData] = useState<ShopData | null>(productData || null);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [isBuyNow, setIsBuyNow] = useState(false); // 区分是加入购物车还是立即购买
+    
+    // 如果没有传递商品数据，则从URL参数获取ID并请求数据（兼容性处理）
+    useEffect(() => {
+        if (!productData) {
+            const id = new URLSearchParams(location.search).get('id');
+            if (id) {
+                console.log('从URL参数获取商品ID:', id);
+                // 这里可以保留原来的API请求逻辑作为备用
+                // 但主要使用传递的数据
+            }
+        }
+    }, [productData, location.search]);
     
     const toggleCollect = () => {
         setIsCollected(!isCollected);
@@ -61,34 +62,62 @@ const Shoppdetail: React.FC = () => {
         setSelectedColor(null);
         setSelectedSize(null);
         setQuantity(1);
+        setIsBuyNow(false); // 标记为加入购物车
+        setShowPopup(true);
+    };
+
+    const openBuyNowPopup = () => {
+        // 重置选择状态为初始值
+        setSelectedColor(null);
+        setSelectedSize(null);
+        setQuantity(1);
+        setIsBuyNow(true); // 标记为立即购买
         setShowPopup(true);
     };
 
     const closePopup = () => {
         // 检查是否所有选项都已选择
         if (selectedColor && selectedSize && ShopData) {
-            // 创建购物车商品对象
-            const cartItem: CartItem = {
-                id: ShopData._id,
-                name: ShopData.name,
-                price: ShopData.price,
-                image: ShopData.image,
-                color: selectedColor,
-                size: selectedSize,
-                quantity: quantity
-            };
-            
-            // 添加到购物车
-            addItem(cartItem);
-            
-            // 显示成功消息
-            setShowSuccessMessage(true);
-            setTimeout(() => {
-                setShowSuccessMessage(false);
-            }, 3000);
-            
-            // 跳转到购物车页面
-            navigate(`/cart?id=${id}`);
+            if (isBuyNow) {
+                // 立即购买：跳转到订单确认页面
+                const orderItem = {
+                    id: ShopData._id,
+                    name: ShopData.name,
+                    price: ShopData.price,
+                    image: ShopData.image,
+                    color: selectedColor,
+                    size: selectedSize,
+                    quantity: quantity
+                };
+                
+                navigate(`/shopping`, { 
+                    state: { 
+                        orderItems: [orderItem],
+                        quantity: quantity
+                    } 
+                });
+            } else {
+                // 加入购物车
+                const cartItem: CartItem = {
+                    id: ShopData._id,
+                    name: ShopData.name,
+                    price: ShopData.price,
+                    image: ShopData.image,
+                    color: selectedColor,
+                    size: selectedSize,
+                    quantity: quantity
+                };
+                
+                addItem(cartItem);
+                
+                // 显示成功消息
+                setShowSuccessMessage(true);
+                setTimeout(() => {
+                    setShowSuccessMessage(false);
+                }, 3000);
+                
+                navigate(`/cart`);
+            }
         }
         setShowPopup(false);
     };
@@ -109,6 +138,22 @@ const Shoppdetail: React.FC = () => {
         setSelectedSize(size);
     };
 
+    // 如果没有商品数据，显示加载状态
+    if (!ShopData) {
+        return (
+            <div className="shoppdetail">
+                <div className="headers">
+                    <div className="header-btn" onClick={() => navigate(-1)}>返回</div>
+                    <span className="header-title">商品详情</span>
+                    <div className="header-btn">分享</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                    <p>正在加载商品信息...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="shoppdetail">
             {/* 粘性头部 */}
@@ -125,59 +170,54 @@ const Shoppdetail: React.FC = () => {
                 </div>
             )}
             
-            {
-                ShopData && (
-                    <>
-                        {/* 商品图片 */}
-                        < div className="product-image-container">
-                            <img src={ShopData.image} alt="商品图片" className='headerimg' />
-                        </div>
+            {/* 商品图片 */}
+            <div className="product-image-container">
+                <img src={ShopData.image} alt="商品图片" className='headerimg' />
+            </div>
 
-                        {/* 价格和信息 */}
-                        <div className='detailone'>
-                            <p className='headerp'>¥{ShopData.price}</p>
-                            <p>{ShopData.name}</p>
-                        </div>
+            {/* 价格和信息 */}
+            <div className='detailone'>
+                <p className='headerp'>¥{ShopData.price}</p>
+                <p>{ShopData.name}</p>
+            </div>
 
-                        {/* 服务卡片 */}
-                        <div className="card" style={{ margin: '10px 0' }}>
-                            <div className='container'>
-                                {services.map((service, index) => (
-                                    <div key={index} className='serviceItem'>
-                                        <img
-                                            src="./对号面.png"
-                                            alt="服务图标"
-                                            className='serviceIcon'
-                                        />
-                                        <span>{service}</span>
-                                    </div>
-                                ))}
-                            </div>
+            {/* 服务卡片 */}
+            <div className="card" style={{ margin: '10px 0' }}>
+                <div className='container'>
+                    {services.map((service, index) => (
+                        <div key={index} className='serviceItem'>
+                            <img
+                                src="./对号面.png"
+                                alt="服务图标"
+                                className='serviceIcon'
+                            />
+                            <span>{service}</span>
                         </div>
+                    ))}
+                </div>
+            </div>
 
-                        {/* 参数卡片 */}
-                        <div className="card">
-                            <div className='detailtwo'>
-                                <p style={{ fontWeight: 'bold' }}>参数</p>
-                                <p className="detailtwop"><span>上市时间:</span><span>2017年秋季</span></p>
-                                <p className="detailtwop"><span>商品系列:</span><span>{ShopData.category}</span></p>
-                            </div>
-                        </div>
+            {/* 参数卡片 */}
+            <div className="card">
+                <div className='detailtwo'>
+                    <p style={{ fontWeight: 'bold' }}>参数</p>
+                    <p className="detailtwop"><span>上市时间:</span><span>2017年秋季</span></p>
+                    <p className="detailtwop"><span>商品系列:</span><span>{ShopData.category}</span></p>
+                    <p className="detailtwop"><span>可选颜色:</span><span>{ShopData.color.join(', ')}</span></p>
+                    <p className="detailtwop"><span>可选尺码:</span><span>{ShopData.size.join(', ')}</span></p>
+                </div>
+            </div>
 
-                        {/* 商品详情卡片 */}
-                        <div className="card" style={{ marginTop: '10px' }}>
-                            <p style={{ fontWeight: 'bold', paddingBottom: '10px' }}>商品详情</p>
-                            <div className="detail-content">
-                                我信仰"民生在勤"!因为我也深深地知道，生存的条件就是要勤劳，而"勤则不匮"却是胡说八道!恰恰相反，
-                                劳动强度大的人群往往物质最匮乏，当工资不足以养家时，加班加点或身兼数职便成了的选项。
-                                这是耶和华在《马泰福音》中制定的铁律:20%的人占据着80%的财富，80%的人为了那20%的资源争夺而挣扎。
-                                主说:我要让好的更好，差的更差。这便是"马泰效应"，只要人类存在，这铁律便不会有更张.
-                            </div>
-                        </div>
-                    </>
-                )
-            }
-
+            {/* 商品详情卡片 */}
+            <div className="card" style={{ marginTop: '10px' }}>
+                <p style={{ fontWeight: 'bold', paddingBottom: '10px' }}>商品详情</p>
+                <div className="detail-content">
+                    我信仰"民生在勤"!因为我也深深地知道，生存的条件就是要勤劳，而"勤则不匮"却是胡说八道!恰恰相反，
+                    劳动强度大的人群往往物质最匮乏，当工资不足以养家时，加班加点或身兼数职便成了的选项。
+                    这是耶和华在《马泰福音》中制定的铁律:20%的人占据着80%的财富，80%的人为了那20%的资源争夺而挣扎。
+                    主说:我要让好的更好，差的更差。这便是"马泰效应"，只要人类存在，这铁律便不会有更张.
+                </div>
+            </div>
 
             {/* 底部栏 */}
             <div className="bottom-bar">
@@ -190,7 +230,7 @@ const Shoppdetail: React.FC = () => {
                 <div className="bar-item action add-to-cart" onClick={openPopup}>
                     加入购物车
                 </div>
-                <div className="bar-item action buy-now">
+                <div className="bar-item action buy-now" onClick={openBuyNowPopup}>
                     立即购买
                 </div>
             </div>
@@ -198,8 +238,8 @@ const Shoppdetail: React.FC = () => {
             {/* 弹出框 */}
             {
                 showPopup && ShopData && (
-                    <div className="popup-overlay">
-                        <div className="popup-content">
+                    <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+                        <div className="popup-content" onClick={(e) => e.stopPropagation()}>
                             <div className="popup-image-placeholder">
                                 <img src={ShopData.image} alt="商品图片" className='headerimg' />
                             </div>
@@ -272,7 +312,7 @@ const Shoppdetail: React.FC = () => {
                     </div>
                 )
             }
-        </div >
+        </div>
     );
 };
 
