@@ -19,7 +19,8 @@ import {
     TruckOutline,
     SearchOutline
 } from 'antd-mobile-icons';
-import styles from './Mine.module.css';
+import styles from './ModuleCSS/Mine.module.css'
+import TabBar from './TabBar';
 
 interface UserInfo {
     id: string;
@@ -223,6 +224,7 @@ export default function Mine() {
                     退出登录
                 </Button>
             </div>
+            <TabBar />
         </div>
     );
 }

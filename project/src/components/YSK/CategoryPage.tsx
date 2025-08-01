@@ -10,7 +10,8 @@ import {
 } from 'antd-mobile';
 import { useNavigate, useParams } from 'react-router-dom';
 import { GET } from '../../Axios/api';
-import styles from './Shou.module.css';
+import styles from './ModuleCSS/Shou.module.css';
+import TabBar from './TabBar';
 
 interface Product {
   _id: string;
@@ -141,6 +142,7 @@ export default function CategoryPage() {
           <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
         </List>
       </div>
+      <TabBar />
     </div>
   );
 } 
