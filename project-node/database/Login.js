@@ -12,7 +12,8 @@ const userSchema = mongoose.Schema({            // 用户表
   role_id: {                 // 角色id
     type: mongoose.Schema.Types.ObjectId,
     ref: 'role'
-  }
+  },
+  iamge: String,            // 头像
 })
 const userModel = mongoose.model('user', userSchema, 'user')
 

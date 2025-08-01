@@ -61,7 +61,7 @@
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  height: 160px;
+  height: 200px;
 }
 
 .category-scroll {
@@ -92,7 +92,6 @@
 
 .category-pages {
   display: flex;
-  min-width: max-content;
   padding-bottom: 20px;
 }
 
@@ -107,31 +106,30 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 20px;
+  gap: 24px;
 }
 
 .category-row {
   display: flex;
   flex: 1;
-  gap: 16px;
+  gap: 24px;
   align-items: center;
   justify-content: flex-start;
 }
 
 .category-grid-item {
-  width: 70px;
-  height: 80px;
-  flex-shrink: 0;
+  width: 110px;
+  height: 120px;
+  padding: 18px 10px;
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 6px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: white;
-  border: 1px solid transparent;
+  background: #fff;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s, border 0.2s;
 }
 
 .category-grid-item:hover {
@@ -145,24 +143,32 @@
 }
 
 .category-icon {
-  width: 40px;
-  height: 40px;
+  width: 72px;
+  font-size: 40px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
-  font-size: 28px;
 }
 
 .category-title {
-  font-size: 13px;
-  color: #333;
+  font-size: 18px;
+  color: #222;
+  font-weight: 500;
   text-align: center;
   line-height: 1.2;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.category-divider {
+  margin: 30px 0 0 0;
+  border: none;
+  border-top: 1px solid #eee;
+  height: 1px;
+  background: transparent;
 }
 
 /* 商品列表样式 */
@@ -233,8 +239,6 @@
   font-size: 14px;
   color: #222;
   font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -261,24 +265,24 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-
+  
   .product-info {
     padding: 8px;
   }
-
+  
   .product-name {
     font-size: 13px;
     min-height: 32px;
   }
-
+  
   .product-price {
     font-size: 14px;
   }
 
   /* 分类响应式 */
-  .category-scroll {
+  /* .category-scroll {
     height: 120px;
-  }
+  } */
 
   .category-page {
     max-width: 100%;
@@ -287,17 +291,16 @@
 
   .category-grid-item {
     padding: 3px 2px;
-    height: 40px;
+    height: 70px;
     width: 60px;
   }
 
   .category-icon {
-    font-size: 16px;
-    margin-bottom: 2px;
+    font-size: 30px;
   }
 
   .category-title {
-    font-size: 9px;
+    font-size: 20px;
   }
 }
 
@@ -354,7 +357,7 @@
   border-radius: 12px;
   font-size: 10px;
   padding: 2px 6px;
-}
+} 
 
 /* 底部标签栏样式 */
 .tab-bar {
@@ -432,4 +435,325 @@
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200px 100%;
   animation: skeleton-loading 1.5s infinite;
+}
+
+/* 购物车内容 */
+.cartContent {
+  padding: 16px;
+  background-color: #f5f5f5;
+  min-height: calc(100vh - 120px);
+}
+
+/* 购物车头部 */
+.cartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+}
+
+.cartHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 购物车商品列表 */
+.cartItems {
+  margin-bottom: 16px;
+}
+
+.cartItem {
+  display: flex;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.cartItemImage {
+  flex-shrink: 0;
+}
+
+.cartItemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cartItemName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.3;
+}
+
+.cartItemPrice {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e4393c;
+}
+
+.cartItemAttr {
+  font-size: 12px;
+  color: #666;
+}
+
+.cartItemSubtotal {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.cartItemActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* 购物车底部 */
+.cartFooter {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  z-index: 100;
+}
+
+.cartSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cartTotalItems {
+  font-size: 14px;
+  color: #666;
+}
+
+.cartTotalPrice {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e4393c;
+}
+
+/* 个人页面内容 */
+.mineContent {
+  padding: 16px;
+}
+
+/* 用户信息卡片 */
+.userCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  overflow: hidden;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.userDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.userPhone {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.userLevel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.points {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.editBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 20px;
+}
+
+/* 订单卡片 */
+.orderCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: white;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.orderTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.orderMore {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+  font-size: 14px;
+}
+
+.orderStats {
+  display: flex;
+  padding: 20px 16px;
+  gap: 0;
+}
+
+.orderItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.orderIcon {
+  position: relative;
+  font-size: 24px;
+  color: #666;
+}
+
+.badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4757;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.orderText {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+/* 服务功能卡片 */
+.serviceCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: white;
+}
+
+.serviceHeader {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.serviceTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 20px 16px;
+  gap: 16px;
+}
+
+.serviceItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.serviceIcon {
+  font-size: 24px;
+  color: #667eea;
+}
+
+.serviceText {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+/* 设置卡片 */
+.settingCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: white;
+}
+
+/* 退出登录 */
+.logoutContainer {
+  margin: 16px 0;
+  padding: 0 16px;
+}
+
+.logoutBtn {
+  border-radius: 8px;
+  height: 44px;
+  font-size: 16px;
 }

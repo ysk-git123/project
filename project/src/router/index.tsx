@@ -1,9 +1,7 @@
-
 import { createBrowserRouter } from 'react-router-dom'
 import Login from '../components/YSK/Login'
 import Shou from '../components/YSK/Shou'
 import CategoryPage from '../components/YSK/CategoryPage'
-import Cart from '../components/YJL/cart'
 
 import IsLogin from '../utils/islogin'
 
@@ -15,34 +13,25 @@ import Shopping from '../components/YJL/shopping'
 
 const router = createBrowserRouter([
     {
-        path: '/login',
+        path: '/login',                                 // 登录
         element: <Login />
     },
     {
-        path: '/shou',
-        element: <IsLogin><Shou /></IsLogin>
-    },
-    {
-        path: '/category/:category',
+        path: '/category/:category',                     // 分类
         element: <IsLogin><CategoryPage /></IsLogin>
     },
     {
-        path: '/',
+        path: '/shoppdetail',                            // 商品详情
+        element: <Shoppdetail />
+    },
+    {
+        path: '/shopping',                               // 订单
+        element: <Shopping />
+    },
+    {
+        path: '/',                                        // 首页
         element: <IsLogin><Shou /></IsLogin>
-    },
-    {
-        path:'/shoppdetail',
-        element:<Shoppdetail/>
-    },
-    {
-        path:'/shopping',
-        element:<Shopping/>
-    },
-    {
-        path:'/cart',
-        element:<Cart/>
     }
-
 ])
 
 export default router
