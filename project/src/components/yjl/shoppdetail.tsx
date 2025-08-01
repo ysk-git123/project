@@ -13,6 +13,7 @@ interface ShopData {
     category: string;
     color: string[];
     size: string[];
+    description: string;
 }
 
 const Shoppdetail: React.FC = () => {
@@ -87,7 +88,8 @@ const Shoppdetail: React.FC = () => {
                     image: ShopData.image,
                     color: selectedColor,
                     size: selectedSize,
-                    quantity: quantity
+                    quantity: quantity,
+                    description: ShopData.description
                 };
                 
                 navigate(`/shopping`, { 
@@ -105,7 +107,7 @@ const Shoppdetail: React.FC = () => {
                     image: ShopData.image,
                     color: selectedColor,
                     size: selectedSize,
-                    quantity: quantity
+                    quantity: quantity,
                 };
                 
                 addItem(cartItem);
@@ -212,10 +214,7 @@ const Shoppdetail: React.FC = () => {
             <div className="card" style={{ marginTop: '10px' }}>
                 <p style={{ fontWeight: 'bold', paddingBottom: '10px' }}>商品详情</p>
                 <div className="detail-content">
-                    我信仰"民生在勤"!因为我也深深地知道，生存的条件就是要勤劳，而"勤则不匮"却是胡说八道!恰恰相反，
-                    劳动强度大的人群往往物质最匮乏，当工资不足以养家时，加班加点或身兼数职便成了的选项。
-                    这是耶和华在《马泰福音》中制定的铁律:20%的人占据着80%的财富，80%的人为了那20%的资源争夺而挣扎。
-                    主说:我要让好的更好，差的更差。这便是"马泰效应"，只要人类存在，这铁律便不会有更张.
+                    {ShopData.description}
                 </div>
             </div>
 

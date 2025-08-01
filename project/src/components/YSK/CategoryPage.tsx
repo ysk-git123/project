@@ -84,7 +84,7 @@ export default function CategoryPage() {
 
   // 返回首页
   const handleBack = () => {
-    navigate('/');
+    navigate(-1);
   };
 
   // 商品卡片
