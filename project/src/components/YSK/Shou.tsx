@@ -31,7 +31,7 @@ import {
 } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import { GET } from '../../Axios/api';
-import styles from './Shou.module.css';
+import styles from './ModuleCSS/Shou.module.css'
 
 interface Product {
   _id: string;

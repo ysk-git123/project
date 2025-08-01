@@ -19,7 +19,7 @@ import {
     TruckOutline,
     SearchOutline
 } from 'antd-mobile-icons';
-import styles from './Mine.module.css';
+import styles from './ModuleCSS/Mine.module.css'
 
 interface UserInfo {
     id: string;
