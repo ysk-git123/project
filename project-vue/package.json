@@ -11,9 +11,10 @@
     "commitlint": "commitlint --from HEAD~1 --to HEAD"
   },
   "dependencies": {
+    "axios": "^1.11.0",
     "core-js": "^3.8.3",
     "element-plus": "^2.10.4",
-    "vue": "^3.2.13",
+    "vue": "^3.5.18",
     "vue-router": "^4.5.1",
     "vuex": "^4.0.2",
     "vuex-persistedstate": "^4.1.0"
@@ -24,7 +25,7 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@element-plus/icons-vue": "^2.3.1",
-    "@types/vue-router": "^2.0.0",
+    "@types/node": "^24.1.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vue/cli-plugin-babel": "~5.0.0",
@@ -42,7 +43,7 @@
     "prettier": "^3.6.2",
     "sass": "^1.89.2",
     "sass-loader": "^16.0.5",
-    "typescript": "^5.8.3"
+    "typescript": "^4.9.5"
   },
   "eslintConfig": {
     "root": true,

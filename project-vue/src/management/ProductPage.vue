@@ -1,25 +1,120 @@
 <template>
-  <div class="product-page">
-    <h1>商品</h1>
-    <div class="content-container">
-      <!-- 商品管理内容 -->
-    </div>
-  </div>
+  <el-container>
+    <el-aside class="aside">
+      <div class="aside-title">商品</div>
+      <div
+        v-for="item in navItems"
+        :key="item.path"
+        class="nav-link"
+        @click="handPagel(item.path, item.text)"
+      >
+        <router-link :to="item.path" class="router-link">
+          {{ item.text }}
+        </router-link>
+      </div>
+    </el-aside>
+    <el-container>
+      <el-header class="header">
+        <div class="header-content">
+          <el-header class="header">{{ currentTitle }}</el-header>
+          <button class="theme-toggle" @click="toggleTheme">
+            {{ currentTheme === 'light' ? '切换深色模式' : '切换浅色模式' }}
+          </button>
+        </div>
+      </el-header>
+      <el-main class="main"><router-view></router-view></el-main>
+    </el-container>
+  </el-container>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import { ref, watch, onMounted } from 'vue';
+  import { useRouter, useRoute } from 'vue-router';
+  import { useStore } from 'vuex';
+  const store = useStore();
+  const router = useRouter();
+  const route = useRoute();
+  const currentTheme = store.state.theme;
+  const currentTitle = ref('商品列表');
+  const navItems = [
+    { text: '商品列表', path: '/framework/product/ProductListPage' },
+    { text: '商品审核', path: '/framework/product/ProductAuditPage' },
+  ];
+  const handPagel = (path: string, text: string) => {
+    router.push(path);
+    currentTitle.value = text;
+  };
+  const toggleTheme = () => {
+    store.commit('toggleTheme');
+  };
+  onMounted(() => {
+    const matchedItem = navItems.find((item) => item.path === route.path);
+    if (matchedItem) {
+      currentTitle.value = matchedItem.text;
+    }
+  });
+  watch(
+    () => route.path,
+    (newPath) => {
+      const matchedItem = navItems.find((item) => item.path === newPath);
+      if (matchedItem) {
+        currentTitle.value = matchedItem.text;
+      }
+    },
+  );
+</script>
 
 <style scoped lang="scss">
-  .product-page {
-    height: 100%;
-    padding: 1.5rem;
+  .aside {
+    width: 12.7rem;
+    height: 39rem;
+    background: rgb(244, 244, 244);
+    border: 0.01rem solid rgb(218, 218, 218);
   }
-
-  .content-container {
-    margin-top: 1rem;
-    background-color: #fff;
-    border-radius: 0.25rem;
-    padding: 1.5rem;
-    min-height: calc(100% - 3rem);
+  .header {
+    border: 0.01rem solid rgb(217, 217, 217);
+    background: rgb(244, 244, 244);
+  }
+  .aside-title {
+    width: 100%;
+    border-bottom: 0.01rem solid rgb(217, 217, 217);
+    height: 3.65rem;
+    text-align: center;
+    line-height: 3.65rem;
+    font-size: 1.2rem;
+  }
+  .header {
+    border: 0.01rem solid rgb(217, 217, 217);
+    background: rgb(244, 244, 244);
+  }
+  .main {
+    background: rgb(255, 255, 255);
+    border: 0.01rem solid rgb(235, 235, 235);
+    padding: 1.5rem 1rem;
+  }
+  .nav-link {
+    width: 100%;
+    height: 3rem;
+    text-align: center;
+    line-height: 3rem;
+    border-bottom: 0.01rem solid rgb(217, 217, 217);
+  }
+  .router-link {
+    color: rgb(109, 109, 109);
+    text-decoration: none;
+  }
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 1rem;
+  }
+  .theme-toggle {
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
   }
 </style>

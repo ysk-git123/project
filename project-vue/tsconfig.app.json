@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "vueCompilerOptions": {
+    "plugins": [
+      {
+        "name": "@vuedx/typescript-plugin-vue"
+      }
+    ]
+  }
+}

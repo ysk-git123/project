@@ -21,19 +21,8 @@
         </div>
       </div>
     </div>
-    <div class="common-layout">
-      <el-container>
-        <el-aside class="aside">
-          <div class="aside-title">{{ store.state.currentContent }}</div>
-          <div>
-            <router-view></router-view>
-          </div>
-        </el-aside>
-        <el-container>
-          <el-header class="header">Header</el-header>
-          <el-main class="main"> 区域 </el-main>
-        </el-container>
-      </el-container>
+    <div>
+      <router-view></router-view>
     </div>
   </div>
 </template>
@@ -45,8 +34,8 @@
   const store = useStore();
   const router = useRouter();
   const navItems = [
-    { text: '首页', path: '/framework/home' },
-    { text: '商品', path: '/framework/product' },
+    { text: '首页', path: '/framework/home/SystemHomePage' },
+    { text: '商品', path: '/framework/product/AddProductPage' },
     { text: '订单', path: '/framework/order' },
     { text: '用户', path: '/framework/user' },
     { text: '促销', path: '/framework/promotion' },
@@ -66,7 +55,7 @@
   };
   onMounted(() => {
     const currentPath = router.currentRoute.value.path;
-    if (currentPath === '/framework/home' || currentPath === '/framework') {
+    if (currentPath === '/framework/home/' || currentPath === '/framework') {
       store.commit('setCurrentContent', '首页');
     }
   });
@@ -92,14 +81,6 @@
     line-height: 3rem;
     color: white;
     padding: 0rem 0.5rem;
-  }
-  .aside-title {
-    width: 100%;
-    border-bottom: 0.01rem solid rgb(217, 217, 217);
-    height: 3.65rem;
-    text-align: center;
-    line-height: 3.65rem;
-    font-size: 1.2rem;
   }
   .nav {
     width: 40rem;
@@ -140,20 +121,5 @@
     display: flex;
     justify-content: space-between;
     line-height: 3rem;
-  }
-  .aside {
-    width: 12.7rem;
-    height: 39rem;
-    background: rgb(244, 244, 244);
-    border: 0.01rem solid rgb(218, 218, 218);
-  }
-  .header {
-    border: 0.01rem solid rgb(217, 217, 217);
-    background: rgb(244, 244, 244);
-  }
-  .main {
-    background: rgb(255, 255, 255);
-    border: 0.01rem solid rgb(235, 235, 235);
-    padding: 1.5rem 1rem;
   }
 </style>
