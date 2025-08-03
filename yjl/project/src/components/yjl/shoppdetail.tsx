@@ -1,0 +1,327 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import './shoppdetail.css';
+import { useCart } from '../../utils/CartContext';
+import type { CartItem } from '../../utils/CartContext';
+
+// 定义商品数据类型
+interface ShopData {
+    _id: string;
+    name: string;
+    price: number;
+    image: string;
+    category: string;
+    color: string[];
+    size: string[];
+    description: string;
+}
+
+const Shoppdetail: React.FC = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { addItem } = useCart();
+    
+    // 从location.state中获取完整的商品数据
+    const productData = location.state?.product;
+    console.log('接收到的商品数据:', productData);
+    
+    const services = [
+        "满100元包邮",
+        "新用户首单免费",
+        "正品保证",
+        "7天无理由退货"
+    ];
+    
+    // 状态管理
+    const [isCollected, setIsCollected] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [quantity, setQuantity] = useState(1);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [ShopData] = useState<ShopData | null>(productData || null);
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [isBuyNow, setIsBuyNow] = useState(false); // 区分是加入购物车还是立即购买
+    
+    // 如果没有传递商品数据，则从URL参数获取ID并请求数据（兼容性处理）
+    useEffect(() => {
+        if (!productData) {
+            const id = new URLSearchParams(location.search).get('id');
+            if (id) {
+                console.log('从URL参数获取商品ID:', id);
+                // 这里可以保留原来的API请求逻辑作为备用
+                // 但主要使用传递的数据
+            }
+        }
+    }, [productData, location.search]);
+    
+    const toggleCollect = () => {
+        setIsCollected(!isCollected);
+    };
+
+    // 客服功能
+    const handleCustomerService = () => {
+        // 传递商品信息给智能客服，让AI能够了解当前商品
+        navigate('/ai-customer-service', {
+            state: {
+                productInfo: {
+                    name: ShopData?.name,
+                    price: ShopData?.price,
+                    category: ShopData?.category,
+                    description: ShopData?.description,
+                    colors: ShopData?.color,
+                    sizes: ShopData?.size
+                }
+            }
+        });
+    };
+
+    const openPopup = () => {
+        // 重置选择状态为初始值
+        setSelectedColor(null);
+        setSelectedSize(null);
+        setQuantity(1);
+        setIsBuyNow(false); // 标记为加入购物车
+        setShowPopup(true);
+    };
+
+    const openBuyNowPopup = () => {
+        // 重置选择状态为初始值
+        setSelectedColor(null);
+        setSelectedSize(null);
+        setQuantity(1);
+        setIsBuyNow(true); // 标记为立即购买
+        setShowPopup(true);
+    };
+
+    const closePopup = () => {
+        // 检查是否所有选项都已选择
+        if (selectedColor && selectedSize && ShopData) {
+            if (isBuyNow) {
+                // 立即购买：跳转到订单确认页面
+                const orderItem = {
+                    id: ShopData._id,
+                    name: ShopData.name,
+                    price: ShopData.price,
+                    image: ShopData.image,
+                    color: selectedColor,
+                    size: selectedSize,
+                    quantity: quantity,
+                    description: ShopData.description
+                };
+                
+                navigate(`/shopping`, { 
+                    state: { 
+                        orderItems: [orderItem],
+                        quantity: quantity
+                    } 
+                });
+            } else {
+                // 加入购物车
+                const cartItem: CartItem = {
+                    id: ShopData._id,
+                    name: ShopData.name,
+                    price: ShopData.price,
+                    image: ShopData.image,
+                    color: selectedColor,
+                    size: selectedSize,
+                    quantity: quantity
+                };
+                
+                addItem(cartItem);
+                setShowSuccessMessage(true);
+                setTimeout(() => {
+                    setShowSuccessMessage(false);
+                }, 3000);
+                navigate(`/cart`);
+            }
+        }
+        setShowPopup(false);
+    };
+
+    const changeQuantity = (type: 'increase' | 'decrease') => {
+        if (type === 'increase') {
+            setQuantity(prev => prev + 1);
+        } else if (type === 'decrease' && quantity > 1) {
+            setQuantity(prev => prev - 1);
+        }
+    };
+
+    const selectColor = (color: string) => {
+        setSelectedColor(color);
+    };
+
+    const selectSize = (size: string) => {
+        setSelectedSize(size);
+    };
+
+    // 如果没有商品数据，显示加载状态
+    if (!ShopData) {
+        return (
+            <div className="shoppdetail">
+                <div className="headers">
+                    <div className="header-btn" onClick={() => navigate(-1)}>返回</div>
+                    <span className="header-title">商品详情</span>
+                    <div className="header-btn"></div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                    <p>正在加载商品信息...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="shoppdetail">
+            {/* 头部 */}
+            <div className="headers">
+                <div className="header-btn" onClick={() => navigate(-1)}>返回</div>
+                <span className="header-title">商品详情</span>
+                <div className="header-btn"></div>
+            </div>
+
+            {/* 商品图片 */}
+            <div className="product-image">
+                <img src={ShopData.image} alt="商品图片" className='headerimg' />
+            </div>
+
+            {/* 商品信息 */}
+            <div className="product-info">
+                <h2 className="product-title">{ShopData.name}</h2>
+                <p className="product-price">¥{ShopData.price}</p>
+                <p className="product-category">分类: {ShopData.category}</p>
+            </div>
+
+            {/* 服务信息 */}
+            <div className="services">
+                <h3>服务保障</h3>
+                <div className="service-list">
+                    {services.map((service, index) => (
+                        <span key={index} className="service-item">{service}</span>
+                    ))}
+                </div>
+            </div>
+
+            {/* 商品描述 */}
+            <div className="product-description">
+                <h3>商品描述</h3>
+                <p>{ShopData.description}</p>
+            </div>
+
+            {/* 商品参数 */}
+            <div className="product-params">
+                <h3>商品参数</h3>
+                <div className="param-item">
+                    <span className="param-label">颜色:</span>
+                    <span className="param-value">{ShopData.color.join(', ')}</span>
+                </div>
+                <div className="param-item">
+                    <span className="param-label">尺码:</span>
+                    <span className="param-value">{ShopData.size.join(', ')}</span>
+                </div>
+            </div>
+
+            {/* 成功消息 */}
+            {showSuccessMessage && (
+                <div className="success-message">
+                    商品已成功加入购物车！
+                </div>
+            )}
+
+            {/* 底部栏 */}
+            <div className="bottom-bar">
+                <div className="bar-item" onClick={handleCustomerService}>
+                    <span className="text">客服</span>
+                </div>
+                <div className="bar-item" onClick={toggleCollect}>
+                    <span className={`text ${isCollected ? 'active' : ''}`}>收藏</span>
+                </div>
+                <div className="bar-item action add-to-cart" onClick={openPopup}>
+                    加入购物车
+                </div>
+                <div className="bar-item action buy-now" onClick={openBuyNowPopup}>
+                    立即购买
+                </div>
+            </div>
+
+            {/* 弹出框 */}
+            {
+                showPopup && ShopData && (
+                    <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+                        <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="popup-image-placeholder">
+                                <img src={ShopData.image} alt="商品图片" className='headerimg' />
+                            </div>
+                            <div className="popup-info">
+                                <p>¥{ShopData.price}</p>
+                                <p>库存49件</p>
+                                {/* 条件显示选择结果 */}
+                                {selectedColor && selectedSize ? (
+                                    <p>已选择 {selectedColor} {selectedSize}</p>
+                                ) : (
+                                    <p style={{ color: 'red' }}>请选择颜色和尺码</p>
+                                )}
+                            </div>
+                            <div className="popup-options">
+                                {/* 颜色选择 */}
+                                <div>
+                                    <p>颜色</p>
+                                    <div className="popup-buttons">
+                                        {ShopData.color.map((color: string) => (
+                                            <button
+                                                key={color}
+                                                className={color === selectedColor ? 'active' : ''}
+                                                onClick={() => selectColor(color)}
+                                            >
+                                                {color}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 尺码选择 */}
+                                <div>
+                                    <p>尺码</p>
+                                    <div className="popup-buttons">
+                                        {ShopData.size.map((size: string) => (
+                                            <button
+                                                key={size}
+                                                className={size === selectedSize ? 'active' : ''}
+                                                onClick={() => selectSize(size)}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 数量选择 */}
+                                <div>
+                                    <p>购买数量</p>
+                                    <div className="popup-quantity">
+                                        <button onClick={() => changeQuantity('decrease')}>-</button>
+                                        <span>{quantity}</span>
+                                        <button onClick={() => changeQuantity('increase')}>+</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 确定按钮 */}
+                            <button
+                                className="popup-confirm"
+                                onClick={closePopup}
+                                style={{
+                                    backgroundColor: selectedColor && selectedSize ? '#ff6700' : '#ccc',
+                                    cursor: selectedColor && selectedSize ? 'pointer' : 'not-allowed'
+                                }}
+                            >
+                                {selectedColor && selectedSize ? '确定' : '请完成选择'}
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        </div>
+    );
+};
+
+export default Shoppdetail;
