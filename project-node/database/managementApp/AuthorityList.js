@@ -9,7 +9,11 @@ const LoginApp = mongoose.model('Loginlist', Login, 'Loginlist');
 const Authority = new mongoose.Schema({
     username: String, // 用户名
     Authoritys: String, //权限
-    merchantCode: String, //商户号
+    merchantCode: {
+        type: String,
+        required: true,
+        index: true
+    }, //商户号
     userAM: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Loginlist',

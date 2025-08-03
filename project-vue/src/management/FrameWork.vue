@@ -28,24 +28,19 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, watch } from 'vue';
+  import { onMounted, watch, computed } from 'vue';
   import { useRouter } from 'vue-router';
   import { useStore } from 'vuex';
+  import rolePermissions from '../permission';
   const store = useStore();
   const router = useRouter();
-  const navItems = [
-    { text: '首页', path: '/framework/home/SystemHomePage' },
-    { text: '商品', path: '/framework/product/AddProductPage' },
-    { text: '订单', path: '/framework/order' },
-    { text: '用户', path: '/framework/user' },
-    { text: '促销', path: '/framework/promotion' },
-    { text: '运营', path: '/framework/operation' },
-    { text: '统计', path: '/framework/statistics' },
-    { text: '财务', path: '/framework/finance' },
-    { text: '权限', path: '/framework/permission' },
-  ];
+  const navItems = computed(() => {
+    const userInfo = store.state.userInfo;
+    if (!userInfo || !userInfo.role) return [];
+    return rolePermissions[userInfo.role as keyof typeof rolePermissions] || rolePermissions.admin;
+  });
   const pathMap: Record<string, string> = Object.fromEntries(
-    navItems.map((item) => [item.path, item.text]),
+    navItems.value.map((item: { path: string; text: string }) => [item.path, item.text]),
   );
   const HandSwitch = () => {
     router.push('/');
@@ -83,7 +78,7 @@
     padding: 0rem 0.5rem;
   }
   .nav {
-    width: 40rem;
+    // width: 40rem;
     height: 3rem; /* 添加明确高度 */
     display: flex; /* 使用flex布局 */
     align-items: center; /* 垂直居中 */
@@ -102,6 +97,7 @@
   .nav-item {
     /* 可添加垂直居中相关样式 */
     line-height: normal; /* 确保不与flex居中冲突 */
+    margin-left: 2rem;
   }
   .nav-link {
     color: inherit; // 继承父元素颜色

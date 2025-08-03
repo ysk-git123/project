@@ -92,8 +92,23 @@
         username: ruleForm.username,
         password: ruleForm.pass,
       });
+      console.log(
+        '用户名: ' + res.data.username,
+        '权限: ' + res.data.role,
+        'userId: ' + res.data.userId,
+      );
       store.commit('login', res.data.token);
-      ElMessage.success('登录成功');
+      store.commit('setUserInfo', {
+        username: res.data.username,
+        role:
+          res.data.role === '商家'
+            ? 'merchant'
+            : res.data.role === '超级管理员'
+              ? 'admin'
+              : res.data.role,
+        userId: res.data.userId,
+      });
+      ElMessage.success({ message: '登录成功', duration: 1000 });
       router.push('/framework/home/SystemHomePage');
     } catch {
       ElMessage.error('登录失败');

@@ -1,9 +1,8 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 
-
-router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get("/", function (req, res, next) {
+  res.render("index", { title: "Express" });
 });
 
 module.exports = router;
@@ -39,6 +38,8 @@ router.post("/login", async (req, res, next) => {
         msg: "登录成功",
         data: {
           username: user.username,
+          role: authority ? authority.Authoritys : "无角色权限",
+          userId: user._id
         },
       });
     } else {
@@ -57,4 +58,4 @@ router.post("/login", async (req, res, next) => {
 });
 
 module.exports = router;
-// const express = require("express");          
+// const express = require("express");

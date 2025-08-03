@@ -33,5 +33,6 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'vue/multi-word-component-names': 'warn', // Vue组件名建议多单词
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // 允许_开头的未使用变量
+    '@typescript-eslint/no-require-imports': 'off', // 允许使用require导入
   },
 };

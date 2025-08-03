@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import store from '../store/index';
+import { beforeEachGuard } from './beforeEachGuard'; // 导入路由守卫
+// import store from '../store/index';
+// import rolePermissions from '../permission';
 
 // 登录界面
 import Login from '../pages/LoginPages.vue';
@@ -111,24 +113,6 @@ const router = createRouter({
 });
 
 // 添加路由守卫
-router.beforeEach((to, from, next) => {
-  // 定义不需要登录的白名单路由
-  const whiteList = ['/', '/register', '/forget'];
+router.beforeEach(beforeEachGuard);
 
-  // 检查是否在白名单中
-  if (whiteList.includes(to.path)) {
-    next();
-    return;
-  }
-
-  // 检查是否已登录 (假设store中有isLoggedIn状态)
-  // 如果没有使用Vuex, 可以使用localStorage检查: localStorage.getItem('token')
-  const isLoggedIn = store.state.isLoggedIn || localStorage.getItem('token');
-
-  if (isLoggedIn) {
-    next();
-  } else {
-    next('/');
-  }
-});
 export default router;
