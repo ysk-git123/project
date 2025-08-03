@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-var { userModel, roleModel, menuModel } = require('../../database/Login')
+var { userModel } = require('../../database/Login')
 var { shopModel } = require('../../database/shop')
 var JWT = require('jsonwebtoken')
 
@@ -9,8 +9,7 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body
         console.log('登录请求:', { username, password: '***' });
-
-        const user = await userModel.findOne({ username, password }).populate('role_id',);
+        const user = await userModel.findOne({ username, password })
         console.log('完整用户数据:', user);
 
         if (!user) {
@@ -20,28 +19,11 @@ router.post('/login', async (req, res) => {
             })
         }
 
-        // 获取完整的角色信息
-        const roleInfo = user.role_id ? {
-            id: user.role_id._id,
-            name: user.role_id.rolename,
-            description: user.role_id.description,
-            status: user.role_id.status,
-            permissions: user.role_id.permissions || []
-        } : {
-            id: null,
-            name: '普通用户',
-            description: '默认角色',
-            status: 1,
-            permissions: []
-        };
-
         // 生成双 Token
         const accessToken = JWT.sign(
             {
                 userId: user._id,
                 username: user.username,
-                roleId: roleInfo.id,
-                roleName: roleInfo.name
             },
             'access_secret',
             { expiresIn: '15m' }
@@ -61,7 +43,10 @@ router.post('/login', async (req, res) => {
                     id: user._id,
                     username: user.username,
                     status: user.status,
-                    role: roleInfo
+                    image: user.image,
+                    phone: user.phone,
+                    email: user.email,
+                    create_time: user.create_time
                 },
                 accessToken,
                 refreshToken
@@ -91,10 +76,7 @@ router.post('/refresh', async (req, res) => {
 
         // 验证刷新令牌
         const decoded = JWT.verify(refreshToken, 'refresh_secret');
-        const user = await userModel.findById(decoded.userId).populate({
-            path: 'role_id',
-            select: 'rolename description status permissions'
-        });
+        const user = await userModel.findById(decoded.userId)
 
         if (!user || user.status === 0) {
             return res.status(401).json({
@@ -103,28 +85,16 @@ router.post('/refresh', async (req, res) => {
             });
         }
 
-        // 获取完整的角色信息
-        const roleInfo = user.role_id ? {
-            id: user.role_id._id,
-            name: user.role_id.rolename,
-            description: user.role_id.description,
-            status: user.role_id.status,
-            permissions: user.role_id.permissions || []
-        } : {
-            id: null,
-            name: '普通用户',
-            description: '默认角色',
-            status: 1,
-            permissions: []
-        };
 
         // 生成新的访问令牌
         const newAccessToken = JWT.sign(
             {
                 userId: user._id,
                 username: user.username,
-                roleId: roleInfo.id,
-                roleName: roleInfo.name
+                image: user.image,
+                phone: user.phone,
+                email: user.email,
+                create_time: user.create_time
             },
             'access_secret',
             { expiresIn: '15m' }

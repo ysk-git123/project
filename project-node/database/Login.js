@@ -9,45 +9,14 @@ const userSchema = mongoose.Schema({            // 用户表
     type: Number,
     default: 0
   },
-  role_id: {                 // 角色id
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'role'
-  },
-  iamge: String,            // 头像
+  image: String,            // 头像
+  phone: String,           // 手机号
+  create_time: {            // 创建时间
+    type: Date,
+    default: Date.now
+  }
 })
 const userModel = mongoose.model('user', userSchema, 'user')
 
-
-const roleSchema = mongoose.Schema({          // 角色表
-  rolename: String,         // 角色名称
-  description: String,      // 描述
-  status: {                 // 状态
-    type: Number,
-    default: 0
-  },
-  permissions: [{           // 权限数组
-    type: String,
-    required: true
-  }]
-})
-
-const roleModel = mongoose.model('role', roleSchema, 'role')
-
-
-const menuSchema = mongoose.Schema({
-  menuname: String,          // 菜单名称
-  path: String,              // 前端路由
-  icon: String,              // 图标
-  p_id: {                    // 父级ID
-    type: String,
-    default: '/'
-  },           
-})
-const menuModel = mongoose.model('menu',menuSchema,'menu')
-
 // 导出所有模型
-module.exports = {
-  userModel,
-  roleModel,
-  menuModel
-};
+module.exports = { userModel };
