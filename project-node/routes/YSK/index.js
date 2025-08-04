@@ -200,59 +200,6 @@ router.get('/shop/categories', async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
-// 获取商品列表
-// router.get('/shop', async (req, res) => {
-//     try {
-//         const { category, page = 1, pageSize = 10 } = req.query;
-//         let query = {};
-
-//         // 如果指定了分类，添加分类筛选条件
-//         if (category && category !== 'all') {
-//             query.category = category;
-//         }
-
-//         // 计算分页参数
-//         const skip = (parseInt(page) - 1) * parseInt(pageSize);
-//         const limit = parseInt(pageSize);
-
-//         // 查询总数
-//         const total = await shopModel.countDocuments(query);
-
-//         // 查询分页数据
-//         const data = await shopModel.find(query)
-//             .sort({ _id: -1 })
-//             .skip(skip)
-//             .limit(limit);
-
-//         // 添加调试日志
-//         console.log('=== 商品查询信息 ===');
-//         console.log('请求参数:', { category, page, pageSize });
-//         console.log('查询条件:', query);
-//         console.log('查询结果:', { total, dataLength: data.length });
-
-//         res.json({
-//             success: true,
-//             message: '获取商品成功',
-//             data: {
-//                 list: data,
-//                 pagination: {
-//                     current: parseInt(page),
-//                     pageSize: parseInt(pageSize),
-//                     total: total,
-//                     hasMore: skip + data.length < total
-//                 }
-//             }
-//         });
-//     } catch (error) {
-//         console.error('获取商品错误:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: '获取商品失败'
-//         });
-//     }
-// });
-=======
 // 获取用户信息
 router.get('/user/profile', async (req, res) => {
     try {
@@ -296,7 +243,6 @@ router.get('/user/profile', async (req, res) => {
         });
     }
 });
->>>>>>> 41d93645c1903b38511f87893e93560c00548a78
 
 // 更新用户信息
 router.put('/user/profile', async (req, res) => {
