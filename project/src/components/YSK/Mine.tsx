@@ -19,16 +19,12 @@ import {
     TruckOutline,
     SearchOutline
 } from 'antd-mobile-icons';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import styles from './ModuleCSS/Mine.module.css'
 import TabBar from './TabBar';
 import TokenManager from '../../utils/tokenManager';
-import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getMockOrders, calculateOrderStats } from '../../utils/orderData';
-import type { OrderStats } from '../../utils/orderData';
-=======
->>>>>>> 41d93645c1903b38511f87893e93560c00548a78
 
 interface UserInfo {
     id: string;
@@ -40,25 +36,23 @@ interface UserInfo {
     create_time: string;
 }
 
+interface OrderStats {
+    pending: number;
+    processing: number;
+    shipped: number;
+    completed: number;
+}
+
 export default function Mine() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-<<<<<<< HEAD
     const [orderStats, setOrderStats] = useState<OrderStats>({
         pending: 0,
         processing: 0,
         shipped: 0,
         completed: 0
-=======
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [orderStats] = useState<OrderStats>({
-        pending: 2,
-        processing: 1,
-        shipped: 3,
-        completed: 15
->>>>>>> 41d93645c1903b38511f87893e93560c00548a78
     });
     const navigate = useNavigate();
+    const location = useLocation();
 
     // 检查是否在子路由中
     const isInSubRoute = location.pathname.includes('/mine/');
