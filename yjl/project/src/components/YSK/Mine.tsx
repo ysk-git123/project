@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     List,
     Avatar,
@@ -21,14 +21,16 @@ import {
 } from 'antd-mobile-icons';
 import styles from './ModuleCSS/Mine.module.css'
 import TabBar from './TabBar';
+import TokenManager from '../../utils/tokenManager';
 
 interface UserInfo {
     id: string;
-    name: string;
-    avatar: string;
+    username: string;
+    image: string;
     phone: string;
-    level: string;
-    points: number;
+    email: string;
+    status: number;
+    create_time: string;
 }
 
 interface OrderStats {
@@ -38,23 +40,55 @@ interface OrderStats {
     completed: number;
 }
 
-
 export default function Mine() {
-    const [userInfo] = useState<UserInfo>({
-        id: '1',
-        name: '张三',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-        phone: '138****8888',
-        level: 'VIP会员',
-        points: 2580
-    });
-
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [orderStats] = useState<OrderStats>({
         pending: 2,
         processing: 1,
         shipped: 3,
         completed: 15
     });
+
+    // 获取用户信息
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                setUserInfo(user);
+            } catch (error) {
+                console.error('解析用户信息失败:', error);
+                // 如果解析失败，清除无效数据
+                localStorage.removeItem('user');
+                TokenManager.clearTokens();
+                window.location.href = '/login';
+            }
+        } else {
+            // 如果没有用户信息，跳转到登录页
+            window.location.href = '/login';
+        }
+    }, []);
+
+    // 处理退出登录
+    const handleLogout = () => {
+        TokenManager.clearTokens();
+        Toast.show('退出登录成功');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1000);
+    };
+
+    // 如果用户信息还未加载，显示加载状态
+    if (!userInfo) {
+        return (
+            <div className={styles.mineContainer}>
+                <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                    加载中...
+                </div>
+                <TabBar />
+            </div>
+        );
+    }
 
     const menuItems = [
         {
@@ -125,15 +159,21 @@ export default function Mine() {
             <Card className={styles.userCard}>
                 <div className={styles.userInfo}>
                     <Avatar
-                        src={userInfo.avatar}
+                        src={userInfo.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'}
                         className={styles.avatar}
                     />
                     <div className={styles.userDetails}>
-                        <div className={styles.userName}>{userInfo.name}</div>
-                        <div className={styles.userPhone}>{userInfo.phone}</div>
+                        <div className={styles.userName}>{userInfo.username}</div>
+                        <div className={styles.userPhone}>
+                            {userInfo.phone ? userInfo.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '未设置手机号'}
+                        </div>
                         <div className={styles.userLevel}>
-                            <Tag color='primary'>{userInfo.level}</Tag>
-                            <span className={styles.points}>积分: {userInfo.points}</span>
+                            <Tag color='primary'>
+                                {userInfo.status === 1 ? 'VIP会员' : '普通用户'}
+                            </Tag>
+                            <span className={styles.points}>
+                                注册时间: {new Date(userInfo.create_time).toLocaleDateString()}
+                            </span>
                         </div>
                     </div>
                     <Button
@@ -217,9 +257,7 @@ export default function Mine() {
                     block
                     color='danger'
                     className={styles.logoutBtn}
-                    onClick={() => {
-                        Toast.show('退出登录');
-                    }}
+                    onClick={handleLogout}
                 >
                     退出登录
                 </Button>
