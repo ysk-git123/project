@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import {
     List,
     Avatar,
@@ -22,6 +22,9 @@ import {
 import styles from './ModuleCSS/Mine.module.css'
 import TabBar from './TabBar';
 import TokenManager from '../../utils/tokenManager';
+import { useNavigate } from 'react-router-dom';
+import { getMockOrders, calculateOrderStats } from '../../utils/orderData';
+import type { OrderStats } from '../../utils/orderData';
 
 interface UserInfo {
     id: string;
@@ -33,21 +36,15 @@ interface UserInfo {
     create_time: string;
 }
 
-interface OrderStats {
-    pending: number;
-    processing: number;
-    shipped: number;
-    completed: number;
-}
-
 export default function Mine() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-    const [orderStats] = useState<OrderStats>({
-        pending: 2,
-        processing: 1,
-        shipped: 3,
-        completed: 15
+    const [orderStats, setOrderStats] = useState<OrderStats>({
+        pending: 0,
+        processing: 0,
+        shipped: 0,
+        completed: 0
     });
+    const navigate = useNavigate();
 
     // 获取用户信息
     useEffect(() => {
@@ -67,6 +64,14 @@ export default function Mine() {
             // 如果没有用户信息，跳转到登录页
             window.location.href = '/login';
         }
+    }, []);
+
+    // 获取订单统计
+    useEffect(() => {
+        // 使用共享的订单数据服务
+        const mockOrders = getMockOrders();
+        const stats = calculateOrderStats(mockOrders);
+        setOrderStats(stats);
     }, []);
 
     // 处理退出登录
@@ -94,26 +99,26 @@ export default function Mine() {
         {
             title: '我的订单',
             icon: <UnorderedListOutline />,
-            badge: orderStats.pending + orderStats.processing + orderStats.shipped,
-            onClick: () => Toast.show('跳转到订单页面')
+            badge: orderStats.pending + orderStats.processing + orderStats.shipped + orderStats.completed,
+            onClick: () => navigate('/myorder')
         },
         {
             title: '待付款',
             icon: <PayCircleOutline />,
             badge: orderStats.pending,
-            onClick: () => Toast.show('跳转到待付款页面')
+            onClick: () => navigate('/myorder', { state: { activeTab: 'pending_payment' } })
         },
         {
             title: '待发货',
             icon: <TruckOutline />,
             badge: orderStats.processing,
-            onClick: () => Toast.show('跳转到待发货页面')
+            onClick: () => navigate('/myorder', { state: { activeTab: 'paid' } })
         },
         {
             title: '待收货',
             icon: <GiftOutline />,
             badge: orderStats.shipped,
-            onClick: () => Toast.show('跳转到待收货页面')
+            onClick: () => navigate('/myorder', { state: { activeTab: 'shipped' } })
         }
     ];
 
@@ -192,7 +197,11 @@ export default function Mine() {
             <Card className={styles.orderCard}>
                 <div className={styles.orderHeader}>
                     <span className={styles.orderTitle}>我的订单</span>
-                    <div className={styles.orderMore}>
+                    <div 
+                        className={styles.orderMore}
+                        onClick={() => navigate('/myorder')}
+                        style={{ cursor: 'pointer' }}
+                    >
                         <span>查看全部</span>
                         <RightOutline />
                     </div>

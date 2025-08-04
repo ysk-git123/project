@@ -9,6 +9,9 @@ var LZYRouter = require('./routes/LZY/index')
 var YSKRouter = require('./routes/YSK/index')
 var YJLRouter = require('./routes/YJL/index')
 
+// 引入数据库连接
+require('./database/database');
+
 var app = express();
 app.use(cors());
 

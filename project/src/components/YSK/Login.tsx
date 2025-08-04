@@ -92,6 +92,7 @@ export default function Login() {
               prefix={<UserOutlined />}
               placeholder="请输入用户名"
               disabled={loading}
+              defaultValue="admin"
             />
           </Form.Item>
 
@@ -106,6 +107,7 @@ export default function Login() {
               prefix={<LockOutlined />}
               placeholder="请输入密码"
               disabled={loading}
+              defaultValue="123456"
             />
           </Form.Item>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCart, getCartItemKey } from '../../utils/CartContext';
 import { useNavigate } from 'react-router-dom';
-import './cart.css';
+import './cart.moudel.css';
 
 const Cart: React.FC = () => {
     const { state, removeItem, getTotalPrice } = useCart();

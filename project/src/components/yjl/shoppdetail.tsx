@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import './shoppdetail.css';
+import './shoppdetail.moudle.css';
 import { useCart } from '../../utils/CartContext';
 import type { CartItem } from '../../utils/CartContext';
 
@@ -58,6 +58,23 @@ const Shoppdetail: React.FC = () => {
         setIsCollected(!isCollected);
     };
 
+    // 客服功能
+    const handleCustomerService = () => {
+        // 传递商品信息给智能客服，让AI能够了解当前商品
+        navigate('/ai-customer-service', {
+            state: {
+                productInfo: {
+                    name: ShopData?.name,
+                    price: ShopData?.price,
+                    category: ShopData?.category,
+                    description: ShopData?.description,
+                    colors: ShopData?.color,
+                    sizes: ShopData?.size
+                }
+            }
+        });
+    };
+
     const openPopup = () => {
         // 重置选择状态为初始值
         setSelectedColor(null);
@@ -107,17 +124,14 @@ const Shoppdetail: React.FC = () => {
                     image: ShopData.image,
                     color: selectedColor,
                     size: selectedSize,
-                    quantity: quantity,
+                    quantity: quantity
                 };
                 
                 addItem(cartItem);
-                
-                // 显示成功消息
                 setShowSuccessMessage(true);
                 setTimeout(() => {
                     setShowSuccessMessage(false);
                 }, 3000);
-                
                 navigate(`/cart`);
             }
         }
@@ -127,8 +141,8 @@ const Shoppdetail: React.FC = () => {
     const changeQuantity = (type: 'increase' | 'decrease') => {
         if (type === 'increase') {
             setQuantity(prev => prev + 1);
-        } else {
-            setQuantity(prev => Math.max(1, prev - 1));
+        } else if (type === 'decrease' && quantity > 1) {
+            setQuantity(prev => prev - 1);
         }
     };
 
@@ -147,7 +161,7 @@ const Shoppdetail: React.FC = () => {
                 <div className="headers">
                     <div className="header-btn" onClick={() => navigate(-1)}>返回</div>
                     <span className="header-title">商品详情</span>
-                    <div className="header-btn">分享</div>
+                    <div className="header-btn"></div>
                 </div>
                 <div style={{ textAlign: 'center', padding: '50px 20px' }}>
                     <p>正在加载商品信息...</p>
@@ -220,7 +234,7 @@ const Shoppdetail: React.FC = () => {
 
             {/* 底部栏 */}
             <div className="bottom-bar">
-                <div className="bar-item">
+                <div className="bar-item" onClick={handleCustomerService}>
                     <span className="text">客服</span>
                 </div>
                 <div className="bar-item" onClick={toggleCollect}>
