@@ -123,12 +123,17 @@ router.post('/refresh', async (req, res) => {
 // 获取商品列表
 router.get('/shop', async (req, res) => {
     try {
-        const { category, page = 1, pageSize = 10 } = req.query;
+        const { category, page = 1, pageSize = 10, search = '' } = req.query;
         let query = {};
 
         // 如果指定了分类，添加分类筛选条件
         if (category && category !== 'all') {
             query.category = category;
+        }
+
+        // 如果指定了搜索关键词，添加搜索条件
+        if (search && search.trim() !== '') {
+            query.name = { $regex: search.trim(), $options: 'i' }; // 不区分大小写的模糊搜索
         }
 
         // 计算分页参数
@@ -195,95 +200,153 @@ router.get('/shop/categories', async (req, res) => {
     }
 });
 
-// 获取商品列表
-router.get('/shop', async (req, res) => {
+// 获取用户信息
+router.get('/user/profile', async (req, res) => {
     try {
-        const { category, page = 1, pageSize = 10 } = req.query;
-        let query = {};
-
-        // 如果指定了分类，添加分类筛选条件
-        if (category && category !== 'all') {
-            query.category = category;
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
         }
 
-        // 计算分页参数
-        const skip = (parseInt(page) - 1) * parseInt(pageSize);
-        const limit = parseInt(pageSize);
+        const decoded = JWT.verify(token, 'access_secret');
+        const user = await userModel.findById(decoded.userId);
 
-        // 查询总数
-        const total = await shopModel.countDocuments(query);
-
-        // 查询分页数据
-        const data = await shopModel.find(query)
-            .sort({ _id: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        // 添加调试日志
-        console.log('=== 商品查询信息 ===');
-        console.log('请求参数:', { category, page, pageSize });
-        console.log('查询条件:', query);
-        console.log('查询结果:', { total, dataLength: data.length });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
 
         res.json({
             success: true,
-            message: '获取商品成功',
+            message: '获取用户信息成功',
             data: {
-                list: data,
-                pagination: {
-                    current: parseInt(page),
-                    pageSize: parseInt(pageSize),
-                    total: total,
-                    hasMore: skip + data.length < total
-                }
+                id: user._id,
+                username: user.username,
+                status: user.status,
+                image: user.image,
+                phone: user.phone,
+                email: user.email,
+                create_time: user.create_time
             }
         });
     } catch (error) {
-        console.error('获取商品错误:', error);
-        res.status(500).json({
+        console.error('获取用户信息错误:', error);
+        res.status(401).json({
             success: false,
-            message: '获取商品失败'
+            message: '令牌无效或已过期'
         });
     }
 });
 
-// 添加商品
-router.post('/shop', async (req, res) => {
+// 更新用户信息
+router.put('/user/profile', async (req, res) => {
     try {
-        const { name, image, price, color, size, description, category } = req.body;
-
-        // 验证必填字段
-        if (!name || !image || !price || !category) {
-            return res.status(400).json({
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({
                 success: false,
-                message: '商品名称、图片、价格和分类为必填项'
+                message: '未提供访问令牌'
             });
         }
 
-        const newShop = new shopModel({
-            name,
-            image,
-            price: parseFloat(price),
-            color: color || [],
-            size: size || [],
-            description,
-            category
-        });
+        const decoded = JWT.verify(token, 'access_secret');
+        const { username, phone, email, image } = req.body;
 
-        await newShop.save();
+        // 验证用户名是否已存在（排除当前用户）
+        if (username) {
+            const existingUser = await userModel.findOne({ 
+                username, 
+                _id: { $ne: decoded.userId } 
+            });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: '用户名已存在'
+                });
+            }
+        }
 
-        res.status(201).json({
+        // 验证手机号是否已存在（排除当前用户）
+        if (phone) {
+            const existingUser = await userModel.findOne({ 
+                phone, 
+                _id: { $ne: decoded.userId } 
+            });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: '手机号已存在'
+                });
+            }
+        }
+
+        // 验证邮箱是否已存在（排除当前用户）
+        if (email) {
+            const existingUser = await userModel.findOne({ 
+                email, 
+                _id: { $ne: decoded.userId } 
+            });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: '邮箱已存在'
+                });
+            }
+        }
+
+        // 更新用户信息
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (phone) updateData.phone = phone;
+        if (email) updateData.email = email;
+        if (image) updateData.image = image;
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            decoded.userId,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        res.json({
             success: true,
-            message: '添加商品成功',
-            data: newShop
+            message: '更新用户信息成功',
+            data: {
+                id: updatedUser._id,
+                username: updatedUser.username,
+                status: updatedUser.status,
+                image: updatedUser.image,
+                phone: updatedUser.phone,
+                email: updatedUser.email,
+                create_time: updatedUser.create_time
+            }
         });
-
     } catch (error) {
-        console.error('添加商品错误:', error);
-        res.status(500).json({
-            success: false,
-            message: '添加商品失败'
-        });
+        console.error('更新用户信息错误:', error);
+        if (error.name === 'JsonWebTokenError') {
+            res.status(401).json({
+                success: false,
+                message: '令牌无效'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: '服务器错误'
+            });
+        }
     }
 });
 

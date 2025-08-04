@@ -8,6 +8,7 @@ import {
   List,
   InfiniteScroll,
   Skeleton,
+  SearchBar,
 } from 'antd-mobile';
 import {
   PayCircleOutline,
@@ -125,6 +126,12 @@ export default function Shou() {
   const pageSize = 10; // 每页数量
   const [showSkeleton, setShowSkeleton] = useState(!homeCache.categories || !homeCache.products); // 控制骨架屏显示，默认不显示
   const [updating, setUpdating] = useState(false); // 新增：局部更新 loading
+  
+  // 搜索相关状态
+  const [searchValue, setSearchValue] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   // 轮播图数据
   const bannerItems = [
@@ -147,10 +154,11 @@ export default function Shou() {
     }
   };
 
-  // 支持分页的 fetchProducts
-  const fetchProducts = async (page = 1) => {
+  // 支持分页和搜索的 fetchProducts
+  const fetchProducts = async (page = 1, search = '') => {
     try {
-      const response = await GET(`/YSK/shop?page=${page}&pageSize=${pageSize}`);
+      const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+      const response = await GET(`/YSK/shop?page=${page}&pageSize=${pageSize}${searchParam}`);
       if (response.data.success) {
         const { list, pagination } = response.data.data;
         return {
@@ -165,13 +173,50 @@ export default function Shou() {
     }
   };
 
+  // 搜索功能
+  const handleSearch = async (value: string) => {
+    setSearchValue(value);
+    
+    if (!value.trim()) {
+      setShowSearchResults(false);
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setShowSearchResults(true);
+    
+    try {
+      const { list } = await fetchProducts(1, value);
+      setSearchResults(list);
+    } catch (error) {
+      console.error('搜索失败:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 清除搜索
+  const handleClearSearch = () => {
+    setSearchValue('');
+    setShowSearchResults(false);
+    setSearchResults([]);
+  };
+
   // 触底加载更多
   const loadMore = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
     const nextPage = currentPage + 1;
-    const { list: newList, hasMore: more } = await fetchProducts(nextPage);
-    setProducts(prev => [...prev, ...newList]);
+    const { list: newList, hasMore: more } = await fetchProducts(nextPage, searchValue);
+    
+    if (showSearchResults) {
+      setSearchResults(prev => [...prev, ...newList]);
+    } else {
+      setProducts(prev => [...prev, ...newList]);
+    }
+    
     setCurrentPage(nextPage);
     setHasMore(more);
     setLoading(false);
@@ -262,6 +307,15 @@ export default function Shou() {
       return <GiftOutline />; // 默认为服装类图标
     }
   };
+
+  // 搜索框骨架屏组件
+  const SearchSkeleton = () => (
+    <div className={styles['search-skeleton']}>
+      <div className={styles['search-skeleton-content']}>
+        <Skeleton.Title animated style={{ width: '100%', height: '40px', borderRadius: '20px' }} />
+      </div>
+    </div>
+  );
 
   // 分类骨架屏组件
   const CategorySkeleton = () => (
@@ -360,12 +414,37 @@ export default function Shou() {
     </Card>
   );
 
+  // 当前显示的商品列表
+  const currentProducts = showSearchResults ? searchResults : products;
+  const currentLoading = showSearchResults ? isSearching : loading;
+
   return (
     <div className={styles['mobile-shop']}>
       {/* 顶部导航栏 */}
       <NavBar className={styles['shop-navbar']} backArrow={false}>
         商城首页
       </NavBar>
+
+      {/* 搜索框 */}
+      {showSkeleton ? (
+        <SearchSkeleton />
+      ) : (
+        <div className={styles['search-container']}>
+          <SearchBar
+            placeholder="搜索商品"
+            value={searchValue}
+            onChange={setSearchValue}
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+            showCancelButton={false}
+            style={{
+              '--border-radius': '20px',
+              '--background': '#f5f5f5',
+              '--height': '40px',
+            }}
+          />
+        </div>
+      )}
 
       {/* 轮播图 */}
       {showSkeleton ? (
@@ -445,16 +524,18 @@ export default function Shou() {
         <div className={styles['products-container']}>
           <List>
             <div className={styles['products-grid']}>
-              {products.length === 0 && !loading && (
-                <div className={styles['empty-container']}>暂无商品</div>
+              {currentProducts.length === 0 && !currentLoading && (
+                <div className={styles['empty-container']}>
+                  {showSearchResults ? '未找到相关商品' : '暂无商品'}
+                </div>
               )}
-              {products.map((product) => (
+              {currentProducts.map((product) => (
                 <div key={product._id} className={styles['product-item']}>
                   <ProductCard product={product} />
                 </div>
               ))}
             </div>
-            <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />
+            {!showSearchResults && <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />}
           </List>
         </div>
       )}

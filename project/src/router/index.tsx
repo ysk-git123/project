@@ -4,6 +4,7 @@ import Shou from '../components/YSK/Shou'
 import CategoryPage from '../components/YSK/CategoryPage'
 import Classify from '../components/YSK/Classify'
 import Mine from '../components/YSK/Mine'
+import Account from '../components/YSK/Account'
 
 import IsLogin from '../utils/islogin'
 
@@ -46,7 +47,13 @@ const router = createBrowserRouter([
     },
     {
         path: '/mine',                                   // 我的
-        element: <IsLogin><Mine /></IsLogin>
+        element: <IsLogin><Mine /></IsLogin>,
+        children: [
+            {
+                path: 'account',
+                element: <Account />
+            }
+        ]
     },
     {
         path: '/',                                       // 根路径重定向到首页
