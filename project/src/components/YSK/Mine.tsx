@@ -19,12 +19,16 @@ import {
     TruckOutline,
     SearchOutline
 } from 'antd-mobile-icons';
+import { Outlet, useLocation } from 'react-router-dom';
 import styles from './ModuleCSS/Mine.module.css'
 import TabBar from './TabBar';
 import TokenManager from '../../utils/tokenManager';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { getMockOrders, calculateOrderStats } from '../../utils/orderData';
 import type { OrderStats } from '../../utils/orderData';
+=======
+>>>>>>> 41d93645c1903b38511f87893e93560c00548a78
 
 interface UserInfo {
     id: string;
@@ -38,13 +42,26 @@ interface UserInfo {
 
 export default function Mine() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+<<<<<<< HEAD
     const [orderStats, setOrderStats] = useState<OrderStats>({
         pending: 0,
         processing: 0,
         shipped: 0,
         completed: 0
+=======
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [orderStats] = useState<OrderStats>({
+        pending: 2,
+        processing: 1,
+        shipped: 3,
+        completed: 15
+>>>>>>> 41d93645c1903b38511f87893e93560c00548a78
     });
     const navigate = useNavigate();
+
+    // 检查是否在子路由中
+    const isInSubRoute = location.pathname.includes('/mine/');
 
     // 获取用户信息
     useEffect(() => {
@@ -95,6 +112,11 @@ export default function Mine() {
         );
     }
 
+    // 如果在子路由中，只渲染子路由内容
+    if (isInSubRoute) {
+        return <Outlet />;
+    }
+
     const menuItems = [
         {
             title: '我的订单',
@@ -126,22 +148,18 @@ export default function Mine() {
         {
             title: '收货地址',
             icon: <LocationOutline />,
-            onClick: () => Toast.show('跳转到地址管理')
         },
         {
             title: '我的收藏',
             icon: <HeartOutline />,
-            onClick: () => Toast.show('跳转到收藏页面')
         },
         {
             title: '客服中心',
             icon: <SearchOutline />,
-            onClick: () => Toast.show('跳转到客服页面')
         },
         {
             title: '意见反馈',
             icon: <MessageOutline />,
-            onClick: () => Toast.show('跳转到反馈页面')
         }
     ];
 
@@ -149,12 +167,11 @@ export default function Mine() {
         {
             title: '账户设置',
             icon: <SetOutline />,
-            onClick: () => Toast.show('跳转到账户设置')
+            onClick: () => navigate('/mine/account')
         },
         {
             title: '隐私设置',
             icon: <SetOutline />,
-            onClick: () => Toast.show('跳转到隐私设置')
         }
     ];
 
@@ -235,7 +252,6 @@ export default function Mine() {
                         <div
                             key={index}
                             className={styles.serviceItem}
-                            onClick={item.onClick}
                         >
                             <div className={styles.serviceIcon}>{item.icon}</div>
                             <span className={styles.serviceText}>{item.title}</span>

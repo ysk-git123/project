@@ -30,6 +30,17 @@
   background: white;
 }
 
+/* 搜索框骨架屏样式 */
+.search-skeleton {
+  padding: 12px 16px;
+  background: white;
+}
+
+.search-skeleton-content {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
 /* 轮播图样式 */
 .banner-container {
   margin: 12px 16px;
