@@ -5,7 +5,7 @@
 <script setup lang="ts">
   import MainLayout from './Divide/MainLayout.vue';
 
-  const navItems = [{ text: '财务列表', path: 'FinanceList' }];
+  const navItems = [{ text: '综合统计', path: 'FinanceList' }];
 </script>
 
 <style scoped lang="scss"></style>

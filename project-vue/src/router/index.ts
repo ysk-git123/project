@@ -46,10 +46,13 @@ import PromotionList from '../contents/promotion/PromotionList.vue';
 import OperationList from '../contents/operation/OperationList.vue';
 // 左侧导航栏statistics
 import StatisticsList from '../contents/statistics/StatisticsList.vue';
+import StatisticsGoods from '../contents/statistics/StatisticsGoods.vue';
 // 左侧导航栏finance
 import FinanceList from '../contents/finance/FinanceList.vue';
 // 左侧导航栏permission
 import PermissionList from '../contents/permission/PermissionList.vue';
+import PermissionMember from '../contents/permission/PermissionMember.vue';
+import PermissionUser from '../contents/permission/PermissionUser.vue';
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', name: 'Login', component: Login },
@@ -155,7 +158,10 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Statistics',
         component: StatisticsPage,
         redirect: '/framework/statistics/StatisticsList', // 添加默认重定向路由
-        children: [{ path: 'StatisticsList', name: 'StatisticsList', component: StatisticsList }],
+        children: [
+          { path: 'StatisticsList', name: 'StatisticsList', component: StatisticsList },
+          { path: 'StatisticsGoods', name: 'StatisticsGoods', component: StatisticsGoods },
+        ],
       },
       {
         path: 'finance',
@@ -168,8 +174,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'permission',
         name: 'Permission',
         component: PermissionPage,
-        redirect: '/framework/permission/PermissionList', // 添加默认重定向路由
-        children: [{ path: 'PermissionList', name: 'PermissionList', component: PermissionList }],
+        redirect: '/framework/permission/PermissionUser', // 添加默认重定向路由
+        children: [
+          { path: 'PermissionList', name: 'PermissionList', component: PermissionList },
+          { path: 'PermissionMember', name: 'PermissionMember', component: PermissionMember },
+          { path: 'PermissionUser', name: 'PermissionUser', component: PermissionUser },
+        ],
       },
     ],
   },

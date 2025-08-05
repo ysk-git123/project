@@ -5,7 +5,10 @@
 <script setup lang="ts">
   import MainLayout from './Divide/MainLayout.vue';
 
-  const navItems = [{ text: '统计列表', path: 'StatisticsList' }];
+  const navItems = [
+    { text: '交易统计', path: 'StatisticsList' },
+    { text: '商品统计', path: 'StatisticsGoods' },
+  ];
 </script>
 
 <style scoped lang="scss"></style>

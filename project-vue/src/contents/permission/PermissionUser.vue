@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>交易统计</h2>
+    <h2>角色管理</h2>
   </div>
 </template>
 

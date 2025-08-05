@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>财务列表</h2>
+    <h2>综合统计</h2>
   </div>
 </template>
 

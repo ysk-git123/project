@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>权限列表</h2>
+    <h2>操作日志</h2>
   </div>
 </template>
 
