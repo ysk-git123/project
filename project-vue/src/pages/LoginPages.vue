@@ -96,17 +96,28 @@
         '用户名: ' + res.data.username,
         '权限: ' + res.data.role,
         'userId: ' + res.data.userId,
+        '商家编号: ' + res.data.merchantCode,
       );
-      store.commit('login', res.data.token);
-      store.commit('setUserInfo', {
-        username: res.data.username,
-        role:
-          res.data.role === '商家'
-            ? 'merchant'
-            : res.data.role === '超级管理员'
-              ? 'admin'
-              : res.data.role,
-        userId: res.data.userId,
+      store.commit('login', {
+        accessToken: res.data.accessToken, //假设API返回的token是accessToken
+        refreshToken: res.data.refreshToken || '', //假设API返回的token是refreshToken
+        userInfo: {
+          username: res.data.username,
+          role:
+            res.data.role === '商家'
+              ? 'merchant'
+              : res.data.role === '超级管理员'
+                ? 'admin'
+                : res.data.role === '运营'
+                  ? 'operating'
+                  : res.data.role === '统计'
+                    ? 'statistics'
+                    : res.data.role === '财务'
+                      ? 'finance'
+                      : res.data.role,
+          userId: res.data.userId,
+          merchantCode: res.data.merchantCode,
+        },
       });
       ElMessage.success({ message: '登录成功', duration: 1000 });
       router.push('/framework/home/SystemHomePage');

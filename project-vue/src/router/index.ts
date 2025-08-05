@@ -19,7 +19,7 @@ import StatisticsPage from '../management/StatisticsPage.vue'; //统计
 import FinancePage from '../management/FinancePage.vue'; // 财务
 import PermissionPage from '../management/PermissionPage.vue'; //权限
 // 左侧导航栏home
-import AccoutSettPage from '../contents/home/AccountSettPage.vue'; //账号设置
+import AccountSettPage from '../contents/home/AccountSettPage.vue'; //账号设置
 import LoginLogPage from '../contents/home/LoginLogPage.vue'; // 登录日志
 import SystemHomePage from '../contents/home/SystemHomePage.vue'; // 系统首页
 import SystemInfoPage from '../contents/home/SystemInfoPage.vue'; // 系统信息
@@ -33,18 +33,23 @@ import ProductRecycleBinPage from '../contents/product/ProductRecycleBinPage.vue
 import ProductReviewPage from '../contents/product/ProductReviewPage.vue'; // 商品审核
 import ProductSettingsPage from '../contents/product/ProductSettingsPage.vue'; // 商品设置
 // 左侧导航栏order
-
+import OrderListPage from '../contents/order/OrderListPage.vue'; // 订单列表
+import OrderSettingsPage from '../contents/order/OrderSettingsPage.vue'; // 订单设置
+import RefundApplicationPage from '../contents/order/RefundApplicationPage.vue'; // 退款申请
+import ReturnApplicationPage from '../contents/order/ReturnApplicationPage.vue'; // 退货申请
+import ReturnReasonSettingsPage from '../contents/order/ReturnReasonSettingsPage.vue'; // 退换原因设置
 // 左侧导航栏user
-
+import UserList from '../contents/user/UserList.vue';
 // 左侧导航栏promotion
-
+import PromotionList from '../contents/promotion/PromotionList.vue';
 // 左侧导航栏operation
-
+import OperationList from '../contents/operation/OperationList.vue';
 // 左侧导航栏statistics
-
+import StatisticsList from '../contents/statistics/StatisticsList.vue';
 // 左侧导航栏finance
-
+import FinanceList from '../contents/finance/FinanceList.vue';
 // 左侧导航栏permission
+import PermissionList from '../contents/permission/PermissionList.vue';
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', name: 'Login', component: Login },
@@ -59,8 +64,9 @@ const routes: Array<RouteRecordRaw> = [
         path: 'home',
         name: 'Home',
         component: HomePage,
+        redirect: '/framework/home/SystemHomePage', // 添加默认重定向路由
         children: [
-          { path: 'AccoutSettPage', name: 'AccoutSettPage', component: AccoutSettPage },
+          { path: 'AccountSettPage', name: 'AccountSettPage', component: AccountSettPage },
           { path: 'LoginLogPage', name: 'LoginLogPage', component: LoginLogPage },
           { path: 'SystemHomePage', name: 'SystemHomePage', component: SystemHomePage },
           { path: 'SystemInfoPage', name: 'SystemInfoPage', component: SystemInfoPage },
@@ -70,6 +76,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'product',
         name: 'Product',
         component: ProductPage,
+        redirect: '/framework/product/ProductListPage', // 添加默认重定向路由
         children: [
           { path: 'ProductListPage', name: 'ProductListPage', component: ProductListPage },
           { path: 'ProductAuditPage', name: 'ProductAuditPage', component: ProductAuditPage },
@@ -97,13 +104,73 @@ const routes: Array<RouteRecordRaw> = [
           },
         ],
       },
-      { path: 'order', name: 'Order', component: OrderPage },
-      { path: 'user', name: 'User', component: UserPage },
-      { path: 'promotion', name: 'Promotion', component: PromotionPage },
-      { path: 'operation', name: 'Operation', component: OperationPage },
-      { path: 'statistics', name: 'Statistics', component: StatisticsPage },
-      { path: 'finance', name: 'Finance', component: FinancePage },
-      { path: 'permission', name: 'Permission', component: PermissionPage },
+      {
+        path: 'order',
+        name: 'Order',
+        component: OrderPage,
+        redirect: '/framework/order/OrderListPage', // 添加默认重定向路由
+        children: [
+          { path: 'OrderListPage', name: 'OrderListPage', component: OrderListPage },
+          { path: 'OrderSettingsPage', name: 'OrderSettingsPage', component: OrderSettingsPage },
+          {
+            path: 'RefundApplicationPage',
+            name: 'RefundApplicationPage',
+            component: RefundApplicationPage,
+          },
+          {
+            path: 'ReturnApplicationPage',
+            name: 'ReturnApplicationPage',
+            component: ReturnApplicationPage,
+          },
+          {
+            path: 'ReturnReasonSettingsPage',
+            name: 'ReturnReasonSettingsPage',
+            component: ReturnReasonSettingsPage,
+          },
+        ],
+      },
+      {
+        path: 'user',
+        name: 'User',
+        component: UserPage,
+        redirect: '/framework/user/UserList', // 添加默认重定向路由
+        children: [{ path: 'UserList', name: 'UserList', component: UserList }],
+      },
+      {
+        path: 'promotion',
+        name: 'Promotion',
+        component: PromotionPage,
+        redirect: '/framework/promotion/PromotionList', // 添加默认重定向路由
+        children: [{ path: 'PromotionList', name: 'PromotionList', component: PromotionList }],
+      },
+      {
+        path: 'operation',
+        name: 'Operation',
+        component: OperationPage,
+        redirect: '/framework/operation/OperationList', // 添加默认重定向路由
+        children: [{ path: 'OperationList', name: 'OperationList', component: OperationList }],
+      },
+      {
+        path: 'statistics',
+        name: 'Statistics',
+        component: StatisticsPage,
+        redirect: '/framework/statistics/StatisticsList', // 添加默认重定向路由
+        children: [{ path: 'StatisticsList', name: 'StatisticsList', component: StatisticsList }],
+      },
+      {
+        path: 'finance',
+        name: 'Finance',
+        component: FinancePage,
+        redirect: '/framework/finance/FinanceList', // 添加默认重定向路由
+        children: [{ path: 'FinanceList', name: 'FinanceList', component: FinanceList }],
+      },
+      {
+        path: 'permission',
+        name: 'Permission',
+        component: PermissionPage,
+        redirect: '/framework/permission/PermissionList', // 添加默认重定向路由
+        children: [{ path: 'PermissionList', name: 'PermissionList', component: PermissionList }],
+      },
     ],
   },
 ];

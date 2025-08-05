@@ -4,6 +4,7 @@ module.exports = {
     browser: true,
     node: true,
     es2021: true,
+    'vue/setup-compiler-macros': true,
   },
   // Vue CLI项目需用vue-eslint-parser作为顶层解析器
   parser: 'vue-eslint-parser',
@@ -34,5 +35,7 @@ module.exports = {
     'vue/multi-word-component-names': 'warn', // Vue组件名建议多单词
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // 允许_开头的未使用变量
     '@typescript-eslint/no-require-imports': 'off', // 允许使用require导入
+    'vue/valid-define-props': 'off',
+    'vue/valid-define-emits': 'off',
   },
 };

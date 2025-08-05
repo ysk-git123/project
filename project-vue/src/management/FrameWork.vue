@@ -12,7 +12,11 @@
         </ul>
       </div>
       <div class="user">
-        <div>admin(用户名)</div>
+        <div>
+          {{ userInfo?.username }}({{
+            userInfo?.merchantCode === 'ME000' ? '超级管理员' : userInfo?.merchantCode
+          }})
+        </div>
         <div>
           <el-icon><Bell /></el-icon>
         </div>
@@ -32,8 +36,12 @@
   import { useRouter } from 'vue-router';
   import { useStore } from 'vuex';
   import rolePermissions from '../permission';
+
   const store = useStore();
   const router = useRouter();
+  // 添加对userInfo的计算属性
+  const userInfo = computed(() => store.state.userInfo);
+
   const navItems = computed(() => {
     const userInfo = store.state.userInfo;
     if (!userInfo || !userInfo.role) return [];
@@ -43,6 +51,7 @@
     navItems.value.map((item: { path: string; text: string }) => [item.path, item.text]),
   );
   const HandSwitch = () => {
+    store.commit('logout');
     router.push('/');
   };
   const updateContent = (content: string) => {
@@ -113,7 +122,7 @@
     color: rgb(103, 204, 255);
   }
   .user {
-    width: 12rem;
+    width: 15rem;
     display: flex;
     justify-content: space-between;
     line-height: 3rem;

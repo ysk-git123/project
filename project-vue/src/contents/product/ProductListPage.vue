@@ -1,16 +1,43 @@
 <template>
-  <div class="product-list-page">
-    <el-card>
-      <template #header>
-        <h2>商品列表</h2>
-      </template>
-      <!-- 页面内容将在这里添加 -->
-    </el-card>
+  <div>
+    <h2>商品列表</h2>
+    <div v-for="item in listData" :key="item._id">
+      <p>{{ item.title }}</p>
+      <p>{{ item.price }}元</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  // 逻辑代码将在这里添加
+  import { ref, onMounted } from 'vue';
+  import { getMerchantList } from '../../axios/api';
+
+  interface MerchantListItem {
+    _id: string;
+    title: string;
+    price: number;
+    flag: boolean;
+    merchant: string;
+  }
+
+  const listData = ref<MerchantListItem[]>([]);
+
+  const getList = async () => {
+    try {
+      const response = await getMerchantList();
+      // @ts-expect-error 响应数据结构与TypeScript类型不匹配，临时忽略类型检查
+      if (response.code === 200) {
+        listData.value = response.data || [];
+      }
+      console.log('列表', response);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  onMounted(() => {
+    getList();
+  });
 </script>
 
 <style scoped lang="scss">

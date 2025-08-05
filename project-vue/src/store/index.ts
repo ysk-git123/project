@@ -8,7 +8,8 @@ export default createStore({
     theme: 'light',
     sidebarOpen: true,
     isLoggedIn: false,
-    token: '',
+    accessToken: '', // 访问令牌
+    refreshToken: '', // 刷新令牌
   },
   mutations: {
     setCurrentContent(state, content: string) {
@@ -23,13 +24,23 @@ export default createStore({
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;
     },
-    login(state, token) {
+    login(state, { accessToken, refreshToken, userInfo }) {
       state.isLoggedIn = true;
-      state.token = token;
+      state.accessToken = accessToken;
+      state.refreshToken = refreshToken;
+      state.userInfo = userInfo;
+    },
+    updateTokens(state, { accessToken, refreshToken }) {
+      state.accessToken = accessToken;
+      if (refreshToken) {
+        state.refreshToken = refreshToken;
+      }
     },
     logout(state) {
       state.isLoggedIn = false;
-      state.token = '';
+      state.accessToken = '';
+      state.refreshToken = '';
+      state.userInfo = null;
     },
   },
   actions: {},
@@ -45,7 +56,8 @@ export default createStore({
         'sidebarOpen',
         'currentContent',
         'isLoggedIn',
-        'token',
+        'accessToken',
+        'refreshToken',
       ],
     }),
   ],

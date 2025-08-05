@@ -1,25 +1,11 @@
 <template>
-  <div class="user-page">
-    <h1>用户</h1>
-    <div class="content-container">
-      <!-- 用户管理内容 -->
-    </div>
-  </div>
+  <MainLayout sidebar-title="用户" :nav-items="navItems" />
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import MainLayout from './Divide/MainLayout.vue';
 
-<style scoped lang="scss">
-  .user-page {
-    height: 100%;
-    padding: 1.5rem;
-  }
+  const navItems = [{ text: '用户列表', path: 'UserList' }];
+</script>
 
-  .content-container {
-    margin-top: 1rem;
-    background-color: #fff;
-    border-radius: 0.25rem;
-    padding: 1.5rem;
-    min-height: calc(100% - 3rem);
-  }
-</style>
+<style scoped lang="scss"></style>

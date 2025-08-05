@@ -1,25 +1,17 @@
 <template>
-  <div class="order-page">
-    <h1>订单</h1>
-    <div class="content-container">
-      <!-- 订单管理内容 -->
-    </div>
-  </div>
+  <MainLayout sidebar-title="订单" :nav-items="navItems" />
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import MainLayout from './Divide/MainLayout.vue';
 
-<style scoped lang="scss">
-  .order-page {
-    height: 100%;
-    padding: 1.5rem;
-  }
+  const navItems = [
+    { text: '订单列表', path: 'OrderListPage' },
+    { text: '订单设置', path: 'OrderSettingsPage' },
+    { text: '退款申请', path: 'RefundApplicationPage' },
+    { text: '退换货申请', path: 'ReturnApplicationPage' },
+    { text: '退换原因设置', path: 'ReturnReasonSettingsPage' },
+  ];
+</script>
 
-  .content-container {
-    margin-top: 1rem;
-    background-color: #fff;
-    border-radius: 0.25rem;
-    padding: 1.5rem;
-    min-height: calc(100% - 3rem);
-  }
-</style>
+<style scoped lang="scss"></style>

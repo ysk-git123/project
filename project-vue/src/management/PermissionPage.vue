@@ -1,25 +1,11 @@
 <template>
-  <div class="permission-page">
-    <h1>权限</h1>
-    <div class="content-container">
-      <!-- 权限管理内容 -->
-    </div>
-  </div>
+  <MainLayout sidebar-title="权限" :nav-items="navItems" />
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import MainLayout from './Divide/MainLayout.vue';
 
-<style scoped lang="scss">
-  .permission-page {
-    height: 100%;
-    padding: 1.5rem;
-  }
+  const navItems = [{ text: '权限列表', path: 'PermissionList' }];
+</script>
 
-  .content-container {
-    margin-top: 1rem;
-    background-color: #fff;
-    border-radius: 0.25rem;
-    padding: 1.5rem;
-    min-height: calc(100% - 3rem);
-  }
-</style>
+<style scoped lang="scss"></style>
