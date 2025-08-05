@@ -309,6 +309,8 @@ router.get('/chat/sessions', async (req, res) => {
 router.use('/', paymentRouter);
 
 // 使用地图路由 - 修复路由挂载
+console.log('正在挂载地图路由到 /api');
 router.use('/api', dituRouter);
+console.log('地图路由挂载完成');
 
 module.exports = router;

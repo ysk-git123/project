@@ -31,6 +31,7 @@ const Shopping: React.FC = () => {
     const [orderItems] = useState<OrderItem[]>(orderData || []);
     const [isPaymentLoading, setIsPaymentLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('alipay');
+    const [buyerMessage, setBuyerMessage] = useState('');
     // 定义用户类型
     interface User {
         id: string;
@@ -76,6 +77,24 @@ const Shopping: React.FC = () => {
     const totalQuantity = orderItems.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+    // 处理地址点击
+    const handleAddressClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowAddressSelector(true);
+    };
+
+    // 处理地址选择
+    const handleAddressSelect = (address: Address) => {
+        setSelectedAddress(address);
+        setShowAddressSelector(false);
+    };
+
+    // 处理地址选择器关闭
+    const handleAddressSelectorClose = () => {
+        setShowAddressSelector(false);
+    };
+
     // 创建支付订单
     const createPayment = async () => {
         setIsPaymentLoading(true);
@@ -87,8 +106,36 @@ const Shopping: React.FC = () => {
                 return;
             }
             
+            // 创建订单数据
+            const orderData = {
+                userId: currentUser.id,
+                username: currentUser.username || currentUser.name || `用户_${currentUser.id}`,
+                items: orderItems,
+                totalAmount: totalPrice,
+                address: selectedAddress,
+                paymentMethod: paymentMethod,
+                message: buyerMessage
+            };
+
+            // 首先创建订单记录（可选，如果后端支持）
+            try {
+                const createOrderResponse = await fetch('http://localhost:3000/YJL/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                if (createOrderResponse.ok) {
+                    const orderResult = await createOrderResponse.json();
+                    console.log('订单创建成功:', orderResult);
+                }
+            } catch (orderError) {
+                console.warn('创建订单记录失败，继续支付流程:', orderError);
+            }
+            
             const amount = totalPrice.toFixed(2);
-            // 使用当前登录用户的用户名
             const username = currentUser.username || currentUser.name || `用户_${currentUser.id}`;
             
             const response = await fetch(`http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}`);
@@ -99,19 +146,43 @@ const Shopping: React.FC = () => {
                 const payWindow = window.open(result.data.payUrl, '_blank', 'width=800,height=600');
                 
                 // 监听支付完成
-                const checkPaymentStatus = () => {
+                const checkPaymentStatus = async () => {
                     if (payWindow?.closed) {
-                        // 支付窗口关闭，可能支付完成
-                        alert('支付窗口已关闭！如果已完成支付，订单将在几分钟内处理。');
-                        
-                        // 如果来自购物车，支付成功后清空购物车
-                        if (fromCart) {
-                            clearCart();
-                            alert('支付成功！购物车已清空');
+                        // 支付窗口关闭，检查支付状态
+                        try {
+                            const statusResponse = await fetch(`http://localhost:3000/YJL/order/status/${result.data.orderNo}`);
+                            if (statusResponse.ok) {
+                                const statusResult = await statusResponse.json();
+                                if (statusResult.code === 200) {
+                                    if (statusResult.data.status === 'success') {
+                                        alert('支付成功！订单已处理。');
+                                        
+                                        // 如果来自购物车，支付成功后清空购物车
+                                        if (fromCart) {
+                                            clearCart();
+                                        }
+                                        
+                                        // 跳转到订单页面
+                                        navigate('/myorder');
+                                        return;
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('检查支付状态失败:', error);
                         }
                         
-                        // 可以跳转到订单页面或其他处理
-                        navigate('/shou'); // 跳转到首页
+                        // 默认处理：支付窗口关闭，可能支付完成
+                        alert('支付窗口已关闭！如果已完成支付，订单将在几分钟内处理。');
+                        
+                        // 如果来自购物车，清空购物车
+                        if (fromCart) {
+                            clearCart();
+                            alert('支付流程完成！购物车已清空');
+                        }
+                        
+                        // 跳转到订单页面查看状态
+                        navigate('/myorder');
                     } else {
                         setTimeout(checkPaymentStatus, 1000);
                     }
@@ -155,7 +226,7 @@ const Shopping: React.FC = () => {
                 <div className={styles['header-btn']}></div>
             </div>
 
-            <div className={styles['address-section']} onClick={() => setShowAddressSelector(true)}>
+            <div className={styles['address-section']} onClick={handleAddressClick}>
                 <div className={styles['address-icon']}>
                     <svg viewBox="0 0 24 24" width="20" height="20">
                         <path fill="#666" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -294,6 +365,8 @@ const Shopping: React.FC = () => {
                     <textarea
                         className={styles['message-input']}
                         placeholder="给卖家留言"
+                        value={buyerMessage}
+                        onChange={(e) => setBuyerMessage(e.target.value)}
                     ></textarea>
                 </div>
 
@@ -332,11 +405,8 @@ const Shopping: React.FC = () => {
             {showAddressSelector && (
                 <AddressSelector
                     currentAddress={selectedAddress}
-                    onAddressSelect={(address) => {
-                        setSelectedAddress(address);
-                        setShowAddressSelector(false);
-                    }}
-                    onClose={() => setShowAddressSelector(false)}
+                    onAddressSelect={handleAddressSelect}
+                    onClose={handleAddressSelectorClose}
                 />
             )}
         </div>

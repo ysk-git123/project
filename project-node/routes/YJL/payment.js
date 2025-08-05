@@ -39,6 +39,87 @@ const orderSchema = new mongoose.Schema({
 
 const orderModel = mongoose.model('Order', orderSchema);
 
+// 订单详情模型定义
+const orderDetailSchema = new mongoose.Schema({
+    orderNo: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
+    userId: { type: String, required: true },
+    items: [{
+        id: String,
+        name: String,
+        price: Number,
+        image: String,
+        color: String,
+        size: String,
+        quantity: Number
+    }],
+    totalAmount: { type: Number, required: true },
+    status: { type: String, default: 'pending' },
+    address: {
+        recipient: String,
+        phone: String,
+        province: String,
+        city: String,
+        district: String,
+        detail: String
+    },
+    paymentMethod: String,
+    message: String,
+    alipayTradeNo: String,
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const orderDetailModel = mongoose.model('OrderDetail', orderDetailSchema);
+
+// 创建完整订单记录
+router.post('/create-order', async (req, res) => {
+    try {
+        const { userId, username, items, totalAmount, address, paymentMethod, message } = req.body;
+        
+        if (!username || !items || !totalAmount) {
+            return res.status(400).json({
+                code: 400,
+                message: '订单信息不完整'
+            });
+        }
+
+        const orderNo = generateOrderNo(userId);
+
+        // 创建详细订单记录
+        const orderDetail = new orderDetailModel({
+            orderNo,
+            username,
+            userId,
+            items,
+            totalAmount,
+            address,
+            paymentMethod,
+            message: message || '',
+            status: 'pending'
+        });
+
+        await orderDetail.save();
+
+        res.json({
+            code: 200,
+            data: {
+                orderNo,
+                orderId: orderDetail._id
+            },
+            message: '订单创建成功'
+        });
+
+    } catch (error) {
+        console.error('创建订单失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '创建订单失败',
+            error: error.message
+        });
+    }
+});
+
 // 健康检查
 router.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'YJL支付服务正常运行' });
@@ -312,5 +393,347 @@ router.get('/user/info/:username', async (req, res) => {
         });
     }
 });
+
+// 查询用户订单列表
+router.get('/orders/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        // 首先尝试从详细订单表获取
+        let orders = await orderDetailModel.find({ username }).sort({ createdAt: -1 });
+        
+        if (orders.length === 0) {
+            // 如果没有详细订单，从简单订单表获取
+            const simpleOrders = await orderModel.find({ username }).sort({ createdAt: -1 });
+            
+            // 转换为前端需要的格式
+            orders = simpleOrders.map(order => ({
+                _id: order._id,
+                orderNo: order.orderNo,
+                username: order.username,
+                userId: order.username,
+                items: [{
+                    id: 'item1',
+                    name: '商品名称',
+                    price: parseFloat(order.amount),
+                    image: '/img/car1.jpg',
+                    color: '默认',
+                    size: '默认',
+                    quantity: 1
+                }],
+                totalAmount: parseFloat(order.amount),
+                status: order.status,
+                address: {
+                    recipient: '收货人',
+                    phone: '13800138000',
+                    province: '北京市',
+                    city: '北京市',
+                    district: '朝阳区',
+                    detail: '详细地址'
+                },
+                paymentMethod: '支付宝',
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt
+            }));
+        }
+        
+        // 转换为前端需要的格式
+        const formattedOrders = orders.map(order => ({
+            id: order._id.toString(),
+            orderNumber: order.orderNo,
+            userId: order.userId,
+            items: order.items || [{
+                id: 'item1',
+                name: '商品名称',
+                price: order.totalAmount || parseFloat(order.amount || 0),
+                image: '/img/car1.jpg',
+                color: '默认',
+                size: '默认',
+                quantity: 1
+            }],
+            totalAmount: order.totalAmount || parseFloat(order.amount || 0),
+            status: mapOrderStatus(order.status),
+            createTime: order.createdAt.toLocaleString('zh-CN'),
+            paymentTime: order.status === 'success' ? order.updatedAt.toLocaleString('zh-CN') : undefined,
+            address: order.address || {
+                recipient: '收货人',
+                phone: '13800138000',
+                province: '北京市',
+                city: '北京市',
+                district: '朝阳区',
+                detail: '详细地址'
+            },
+            paymentMethod: order.paymentMethod || '支付宝'
+        }));
+
+        res.json({
+            code: 200,
+            data: formattedOrders,
+            message: '获取订单列表成功'
+        });
+    } catch (error) {
+        console.error('查询订单列表失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '查询失败',
+            error: error.message
+        });
+    }
+});
+
+// 获取订单详情
+router.get('/order/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        // 首先尝试从详细订单表获取
+        let order = await orderDetailModel.findById(orderId);
+        
+        if (!order) {
+            // 如果没有详细订单，从简单订单表获取
+            order = await orderModel.findById(orderId);
+            
+            if (!order) {
+                return res.status(404).json({
+                    code: 404,
+                    message: '订单不存在'
+                });
+            }
+            
+            // 转换为前端需要的格式
+            order = {
+                _id: order._id,
+                orderNo: order.orderNo,
+                username: order.username,
+                userId: order.username,
+                items: [{
+                    id: 'item1',
+                    name: '商品名称',
+                    price: parseFloat(order.amount),
+                    image: '/img/car1.jpg',
+                    color: '默认',
+                    size: '默认',
+                    quantity: 1
+                }],
+                totalAmount: parseFloat(order.amount),
+                status: order.status,
+                address: {
+                    recipient: '收货人',
+                    phone: '13800138000',
+                    province: '北京市',
+                    city: '北京市',
+                    district: '朝阳区',
+                    detail: '详细地址'
+                },
+                paymentMethod: '支付宝',
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt
+            };
+        }
+        
+        // 转换为前端需要的格式
+        const formattedOrder = {
+            id: order._id.toString(),
+            orderNumber: order.orderNo,
+            userId: order.userId,
+            items: order.items || [{
+                id: 'item1',
+                name: '商品名称',
+                price: order.totalAmount || parseFloat(order.amount || 0),
+                image: '/img/car1.jpg',
+                color: '默认',
+                size: '默认',
+                quantity: 1
+            }],
+            totalAmount: order.totalAmount || parseFloat(order.amount || 0),
+            status: mapOrderStatus(order.status),
+            createTime: order.createdAt.toLocaleString('zh-CN'),
+            paymentTime: order.status === 'success' ? order.updatedAt.toLocaleString('zh-CN') : undefined,
+            shippingTime: order.status === 'shipped' ? order.updatedAt.toLocaleString('zh-CN') : undefined,
+            deliveryTime: order.status === 'delivered' ? order.updatedAt.toLocaleString('zh-CN') : undefined,
+            address: order.address || {
+                recipient: '收货人',
+                phone: '13800138000',
+                province: '北京市',
+                city: '北京市',
+                district: '朝阳区',
+                detail: '详细地址'
+            },
+            paymentMethod: order.paymentMethod || '支付宝',
+            message: order.message || ''
+        };
+
+        res.json({
+            code: 200,
+            data: formattedOrder,
+            message: '获取订单详情成功'
+        });
+    } catch (error) {
+        console.error('获取订单详情失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '获取订单详情失败',
+            error: error.message
+        });
+    }
+});
+
+// 取消订单
+router.post('/order/cancel/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        // 首先尝试从详细订单表获取
+        let order = await orderDetailModel.findById(orderId);
+        
+        if (!order) {
+            // 如果没有详细订单，从简单订单表获取
+            order = await orderModel.findById(orderId);
+            
+            if (!order) {
+                return res.status(404).json({
+                    code: 404,
+                    message: '订单不存在'
+                });
+            }
+        }
+
+        // 检查订单状态是否允许取消
+        if (order.status !== 'pending' && order.status !== 'pending_payment') {
+            return res.status(400).json({
+                code: 400,
+                message: '订单状态不允许取消'
+            });
+        }
+
+        // 更新订单状态
+        order.status = 'cancelled';
+        order.updatedAt = new Date();
+        await order.save();
+
+        res.json({
+            code: 200,
+            message: '订单取消成功'
+        });
+    } catch (error) {
+        console.error('取消订单失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '取消失败',
+            error: error.message
+        });
+    }
+});
+
+// 确认收货
+router.post('/order/confirm/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        // 首先尝试从详细订单表获取
+        let order = await orderDetailModel.findById(orderId);
+        
+        if (!order) {
+            // 如果没有详细订单，从简单订单表获取
+            order = await orderModel.findById(orderId);
+            
+            if (!order) {
+                return res.status(404).json({
+                    code: 404,
+                    message: '订单不存在'
+                });
+            }
+        }
+
+        // 检查订单状态是否允许确认收货
+        if (order.status !== 'shipped') {
+            return res.status(400).json({
+                code: 400,
+                message: '订单状态不允许确认收货'
+            });
+        }
+
+        // 更新订单状态
+        order.status = 'delivered';
+        order.updatedAt = new Date();
+        await order.save();
+
+        res.json({
+            code: 200,
+            message: '确认收货成功'
+        });
+    } catch (error) {
+        console.error('确认收货失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '确认收货失败',
+            error: error.message
+        });
+    }
+});
+
+// 删除订单
+router.delete('/order/delete/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        // 首先尝试从详细订单表获取
+        let order = await orderDetailModel.findById(orderId);
+        let isDetailOrder = true;
+        
+        if (!order) {
+            // 如果没有详细订单，从简单订单表获取
+            order = await orderModel.findById(orderId);
+            isDetailOrder = false;
+            
+            if (!order) {
+                return res.status(404).json({
+                    code: 404,
+                    message: '订单不存在'
+                });
+            }
+        }
+
+        // 检查订单状态是否允许删除（只有已取消的订单才能删除）
+        if (order.status !== 'cancelled') {
+            return res.status(400).json({
+                code: 400,
+                message: '只有已取消的订单才能删除'
+            });
+        }
+
+        // 删除订单
+        if (isDetailOrder) {
+            await orderDetailModel.findByIdAndDelete(orderId);
+        } else {
+            await orderModel.findByIdAndDelete(orderId);
+        }
+
+        res.json({
+            code: 200,
+            message: '订单删除成功'
+        });
+    } catch (error) {
+        console.error('删除订单失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '删除失败',
+            error: error.message
+        });
+    }
+});
+
+// 订单状态映射函数
+function mapOrderStatus(backendStatus) {
+    const statusMap = {
+        'pending': 'pending_payment',
+        'success': 'paid',
+        'shipped': 'shipped',
+        'delivered': 'delivered',
+        'cancelled': 'cancelled',
+        'failed': 'payment_failed'
+    };
+    return statusMap[backendStatus] || 'pending_payment';
+}
 
 module.exports = router; 

@@ -14,10 +14,10 @@ import Shoppdetail from '../components/yjl/shoppdetail'
 import Shopping from '../components/yjl/shopping'
 import Cart from '../components/yjl/cart'
 import CustomerService from '../components/yjl/CustomerService'
-import CustomerServiceTest from '../components/yjl/CustomerServiceTest'
-import TestCustomerService from '../components/yjl/TestCustomerService'
+// import CustomerServiceTest from '../components/yjl/CustomerServiceTest'
+// import TestCustomerService from '../components/yjl/TestCustomerService'
 import MyOrder from '../components/yjl/myorder'
-import PendingPayment from '../components/yjl/pendingPayment'
+import OrderDetail from '../components/yjl/order-detail'
 
 const router = createBrowserRouter([
     {
@@ -49,22 +49,19 @@ const router = createBrowserRouter([
         path: '/myorder',                                // 我的订单
         element: <IsLogin><MyOrder /></IsLogin>
     },
-    {
-        path: '/pendingPayment',                         // 待付款
-        element: <IsLogin><PendingPayment /></IsLogin>
-    },
+
     {
         path: '/ai-customer-service',                    // 智能客服
         element: <CustomerService />
     },
-    {
-        path: '/customer-service-test',                  // 智能客服测试
-        element: <CustomerServiceTest />
-    },
-    {
-        path: '/test-customer-service',                  // 智能客服系统测试
-        element: <TestCustomerService />
-    },
+    // {
+    //     path: '/customer-service-test',                  // 智能客服测试
+    //     element: <CustomerServiceTest />
+    // },
+    // {
+    //     path: '/test-customer-service',                  // 智能客服系统测试
+    //     element: <TestCustomerService />
+    // },
     {
         path: '/classify',                               // 分类
         element: <Classify />
@@ -78,6 +75,10 @@ const router = createBrowserRouter([
                 element: <Account />
             }
         ]
+    },
+    {
+        path: '/order-detail/:orderId',                  // 订单详情
+        element: <IsLogin><OrderDetail /></IsLogin>
     },
     {
         path: '/',                                       // 根路径重定向到首页

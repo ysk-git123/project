@@ -9,15 +9,35 @@ function App() {
   return (
     <>
       <div>
-        <a href="https://vite.dev" target="_blank">
+        <a href="https://vitejs.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>Vite + React</h1>
+      <h1>项目导航</h1>
       <div className="card">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+          <a href="/test-order" style={{ color: '#646cff', textDecoration: 'none' }}>
+            📊 带徽章的订单栏效果
+          </a>
+          <a href="/map" style={{ color: '#646cff', textDecoration: 'none' }}>
+            🗺️ 地图功能测试 (更新API Key)
+          </a>
+          <a href="/shopping" style={{ color: '#646cff', textDecoration: 'none' }}>
+            🛒 购物页面
+          </a>
+          <a href="/myorder" style={{ color: '#646cff', textDecoration: 'none' }}>
+            📋 我的订单
+          </a>
+          <a href="/pendingPayment" style={{ color: '#646cff', textDecoration: 'none' }}>
+            💰 待付款
+          </a>
+          <a href="/login" style={{ color: '#646cff', textDecoration: 'none' }}>
+            🔐 登录页面
+          </a>
+        </div>
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
@@ -26,7 +46,7 @@ function App() {
         </p>
       </div>
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+        🗝️ 高德地图API Key已更新，现在可以测试地图功能
       </p>
     </>
   )

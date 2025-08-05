@@ -143,6 +143,64 @@ export const getMockOrders = (): Order[] => {
                 detail: '回龙观大街小区31号'
             },
             paymentMethod: '支付宝'
+        },
+        {
+            id: '4',
+            orderNumber: 'ORD20241129001',
+            userId: 'user123',
+            items: [
+                {
+                    id: 'item4',
+                    name: '运动帽',
+                    price: 45.00,
+                    image: '/img/car4.jpg',
+                    color: '红色',
+                    size: '均码',
+                    quantity: 1
+                }
+            ],
+            totalAmount: 45.00,
+            status: OrderStatus.CANCELLED,
+            createTime: '2024-11-29 16:45:00',
+            address: {
+                recipient: '张小五',
+                phone: '13945678912',
+                province: '北京市',
+                city: '北京市',
+                district: '昌平区',
+                detail: '回龙观大街小区31号'
+            },
+            paymentMethod: '支付宝',
+            message: '颜色不喜欢，取消订单'
+        },
+        {
+            id: '5',
+            orderNumber: 'ORD20241128001',
+            userId: 'user123',
+            items: [
+                {
+                    id: 'item5',
+                    name: '休闲背包',
+                    price: 128.00,
+                    image: '/img/car5.jpg',
+                    color: '灰色',
+                    size: '标准',
+                    quantity: 1
+                }
+            ],
+            totalAmount: 128.00,
+            status: OrderStatus.CANCELLED,
+            createTime: '2024-11-28 11:20:00',
+            address: {
+                recipient: '张小五',
+                phone: '13945678912',
+                province: '北京市',
+                city: '北京市',
+                district: '昌平区',
+                detail: '回龙观大街小区31号'
+            },
+            paymentMethod: '支付宝',
+            message: '尺寸不合适，取消订单'
         }
     ];
 };
