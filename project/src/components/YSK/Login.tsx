@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { POST } from '../../Axios/api';
 import TokenManager from '../../utils/tokenManager';
+import styles from './ModuleCSS/Login.module.css';
 
 interface LoginForm {
   username: string;
@@ -17,7 +18,10 @@ interface LoginResponse {
     user: {
       id: string;
       username: string;
-      role: string;
+      image: string;
+      phone: string;
+      status: number;
+      create_time: string;
     };
     accessToken: string;
     refreshToken: string;
@@ -41,6 +45,8 @@ export default function Login() {
         // 使用 TokenManager 保存 token 和用户信息
         TokenManager.setTokens(data.data!.accessToken, data.data!.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data!.user));
+        console.log(data.data!.user);
+        
         
         message.success('登录成功！正在跳转...');
         
@@ -60,9 +66,9 @@ export default function Login() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <div className="login-header">
+    <div className={styles.loginContainer}>
+      <div className={styles.loginBox}>
+        <div className={styles.loginHeader}>
           <h2>用户登录</h2>
           <p>请输入您的账号和密码</p>
         </div>
@@ -73,7 +79,7 @@ export default function Login() {
           onFinish={handleLogin}
           autoComplete="off"
           size="large"
-          className="login-form"
+          className={styles.loginForm}
         >
           <Form.Item
             name="username"
@@ -86,6 +92,7 @@ export default function Login() {
               prefix={<UserOutlined />}
               placeholder="请输入用户名"
               disabled={loading}
+              
             />
           </Form.Item>
 
@@ -100,6 +107,7 @@ export default function Login() {
               prefix={<LockOutlined />}
               placeholder="请输入密码"
               disabled={loading}
+              
             />
           </Form.Item>
 
@@ -108,7 +116,7 @@ export default function Login() {
               type="primary"
               htmlType="submit"
               loading={loading}
-              className="login-button"
+              className={styles.loginButton}
               block
             >
               {loading ? '登录中...' : '登录'}

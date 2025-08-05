@@ -1,0 +1,254 @@
+/* MapComponent 组件样式 */
+
+.map-component-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.map-search-container {
+  padding: 12px;
+  position: relative;
+  background-color: #fff;
+  z-index: 1000;
+}
+
+.map-suggestions-list {
+  position: absolute;
+  width: calc(100% - 24px);
+  background-color: #fff;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  max-height: 200px;
+  overflow-y: auto;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+}
+
+.map-suggestion-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.map-suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.map-suggestion-item-with-border {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.map-suggestion-item-with-border:hover {
+  background-color: #f5f5f5;
+}
+
+.map-suggestion-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.map-suggestion-district {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.map-container {
+  position: relative;
+  flex: 1;
+  margin: 0 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-element {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.map-location-button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-location-button:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.map-location-button:active {
+  transform: scale(0.95);
+}
+
+.map-location-icon {
+  font-size: 22px;
+  color: #666666;
+}
+
+.map-address-info {
+  padding: 0 12px 12px;
+  background-color: #fff;
+  margin: 0 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.map-address-text {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 12px 0;
+}
+
+/* 按钮样式覆盖 */
+.map-component-container .adm-button {
+  margin: 0 12px 12px;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 搜索框样式覆盖 */
+.map-search-container .adm-search-bar {
+  border-radius: 8px;
+  background-color: #f5f5f5;
+}
+
+/* 导航栏样式覆盖 */
+.map-component-container .adm-nav-bar {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .map-search-container {
+    padding: 8px;
+  }
+  
+  .map-container {
+    margin: 0 8px 8px;
+  }
+  
+  .map-address-info {
+    margin: 0 8px;
+    padding: 0 8px 8px;
+  }
+  
+  .map-component-container .adm-button {
+    margin: 0 8px 8px;
+    height: 44px;
+    font-size: 15px;
+  }
+  
+  .map-suggestions-list {
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+  }
+}
+
+/* 加载状态样式 */
+.map-component-container .adm-dot-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .map-component-container {
+    background-color: #1a1a1a;
+  }
+  
+  .map-search-container,
+  .map-address-info {
+    background-color: #2d2d2d;
+  }
+  
+  .map-suggestions-list {
+    background-color: #2d2d2d;
+    border: 1px solid #404040;
+  }
+  
+  .map-suggestion-title {
+    color: #fff;
+  }
+  
+  .map-suggestion-district,
+  .map-address-text {
+    color: #ccc;
+  }
+  
+  .map-suggestion-item:hover,
+  .map-suggestion-item-with-border:hover {
+    background-color: #404040;
+  }
+  
+  .map-location-button {
+    background-color: #2d2d2d;
+    border: 1px solid #404040;
+  }
+  
+  .map-location-button:hover {
+    background-color: #404040;
+  }
+}
+
+/* 动画效果 */
+.map-suggestions-list {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 地址信息显示动画 */
+.map-address-info {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

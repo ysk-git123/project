@@ -3,8 +3,8 @@ import TokenManager from "../utils/tokenManager";
 
 // 创建 axios 实例
 const httpClient = axios.create({
-    baseURL: "http://localhost:3000",
-    timeout: 6000,
+    baseURL: "", // 使用相对路径，让Vite代理处理
+    timeout: 15000, // 增加到15秒
     withCredentials: false  
 });
 
@@ -83,7 +83,19 @@ httpClient.interceptors.response.use(
                 TokenManager.clearTokens();
                 window.location.href = '/login';
                 return Promise.reject(error);
-    }
+            }
+        }
+        
+        // 处理超时错误
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+            console.error('请求超时，请检查服务器是否正在运行');
+            return Promise.reject(new Error('请求超时，请检查服务器连接'));
+        }
+        
+        // 处理网络错误
+        if (!error.response) {
+            console.error('网络错误，无法连接到服务器');
+            return Promise.reject(new Error('网络错误，无法连接到服务器'));
         }
         
         return Promise.reject(error);
