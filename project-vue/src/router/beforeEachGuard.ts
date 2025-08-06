@@ -33,16 +33,16 @@ export function beforeEachGuard(
 
   if (isLoggedIn) {
     // 如果是管理员角色，直接放行
-    if (
-      userInfo &&
-      typeof userInfo === 'object' &&
-      'role' in userInfo &&
-      (userInfo as { role: string }).role === 'admin'
-    ) {
-      console.log('管理员角色，直接放行');
-      next();
-      return;
-    }
+    // if (
+    //   userInfo &&
+    //   typeof userInfo === 'object' &&
+    //   'role' in userInfo &&
+    //   (userInfo as { role: string }).role === 'admin'
+    // ) {
+    //   console.log('管理员角色，直接放行');
+    //   next();
+    //   return;
+    // }
 
     // 对于非管理员角色，检查路由权限
     if (userInfo && typeof userInfo === 'object' && 'role' in userInfo) {

@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { ElMessage } from 'element-plus';
 import store from '../store/index';
-import { refreshToken } from './api'; // 导入刷新令牌函数
+import { refreshToken } from './lzyapi'; // 导入刷新令牌函数
 
 // console.log(process.env.VUE_APP_API_BASE_URL || '/api');
 const service: AxiosInstance = axios.create({

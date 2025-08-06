@@ -3,7 +3,7 @@ var {
   LoginApp,
   AuthorityApp,
   ContextApp,
-  ListApp
+  ListApp,
 } = require("../../database/managementApp/AuthorityList");
 var router = express.Router();
 // 导入数据隔离中间件
@@ -88,7 +88,9 @@ router.get(
       const merchantCode = req.merchantCode;
       // console.log('刘振言',merchantCode);
       // 查询与商家编号匹配的Context数据
-      const contextData = await ContextApp.find({ sjMerchantCode: merchantCode });
+      const contextData = await ContextApp.find({
+        sjMerchantCode: merchantCode,
+      });
       // console.log(contextData);
       return res.json({
         code: 200,
@@ -105,24 +107,57 @@ router.get(
   }
 );
 
-router.get("/list", verifyAccessToken, dataIsolationMiddleware, async (req, res, next) => {
-  try {
-    const merchantCode = req.merchantCode;
-    // console.log('商家编号',merchantCode);
-    const listData = await ListApp.find({ Merchant: merchantCode });
-    // console.log('商家产品',listData);
-    return res.json({
-      code:200,
-      msg: "查询成功",
-      data: listData,
-    })
-  } catch (error) {
-    return res.status(500).json({
-      code: 500,
-      msg: "服务器错误",
-      error: error.message,
-    })
+router.get(
+  "/list",
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res, next) => {
+    try {
+      const merchantCode = req.merchantCode;
+      console.log("商家编号", merchantCode);
+      const listData = await ListApp.find({ Merchant: merchantCode });
+      console.log("商家产品", listData);
+      return res.json({
+        code: 200,
+        msg: "查询成功",
+        data: listData,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        code: 500,
+        msg: "服务器错误",
+        error: error.message,
+      });
+    }
   }
-})
+);
+
+// 获取当前用户的角色信息
+router.get(
+  "/roleList",
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res, next) => {
+    try {
+      const query = {
+        ...req.query,
+        merchantCode: req.merchantCode || req.query.merchantCode,
+      };
+      const roleData = await AuthorityApp.find(query);
+      console.log(roleData);
+      return res.json({
+        code: 200,
+        msg: "查询成功",
+        data: roleData,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        code: 500,
+        msg: "服务器错误",
+        error: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;

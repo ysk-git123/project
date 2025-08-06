@@ -45,7 +45,7 @@
   import { ElMessage } from 'element-plus';
   import { useRouter } from 'vue-router';
   import { useStore } from 'vuex';
-  import { login } from '../axios/api';
+  import { login } from '../axios/lzyapi';
   const store = useStore();
   const router = useRouter();
   const ruleFormRef = ref<FormInstance>();

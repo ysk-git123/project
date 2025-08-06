@@ -26,7 +26,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue';
   import { useStore } from 'vuex';
-  import { getMerchantContext } from '../../axios/api';
+  import { getMerchantContext } from '../../axios/lzyapi';
 
   // 在脚本开头添加接口定义
   interface MerchantContextItem {

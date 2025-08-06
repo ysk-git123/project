@@ -7,7 +7,7 @@ module.exports = {
     },
     // 令牌过期时间配置
     expiresIn: {
-        accessToken: '15m', // 访问令牌过期时间(15分钟)
+        accessToken: '7d', // 访问令牌过期时间(15分钟)
         refreshToken: '7d' // 刷新令牌过期时间(7天)
     }
 }
