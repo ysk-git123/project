@@ -21,6 +21,10 @@ const Authority = new mongoose.Schema({
         ref: 'Loginlist',
         required: true
     }, //用户id
+    flag: {
+        type: Boolean,
+        default: false
+    }
 })
 const AuthorityApp = mongoose.model('Authoritylist', Authority, 'Authoritylist');
 

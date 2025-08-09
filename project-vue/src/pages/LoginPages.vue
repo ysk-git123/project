@@ -92,12 +92,6 @@
         username: ruleForm.username,
         password: ruleForm.pass,
       });
-      // console.log(
-      //   '用户名: ' + res.data.username,
-      //   '权限: ' + res.data.role,
-      //   'userId: ' + res.data.userId,
-      //   '商家编号: ' + res.data.merchantCode,
-      // );
       store.commit('login', {
         accessToken: res.data.accessToken, //假设API返回的token是accessToken
         refreshToken: res.data.refreshToken || '', //假设API返回的token是refreshToken
@@ -122,7 +116,7 @@
       ElMessage.success({ message: '登录成功', duration: 1000 });
       router.push('/framework/home/SystemHomePage');
     } catch {
-      ElMessage.error('登录失败,请进行注册');
+      ElMessage.success('登录失败');
       router.push('/register');
     }
   };

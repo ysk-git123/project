@@ -8,7 +8,7 @@
   const navItems = [
     { text: '角色管理', path: 'PermissionUser' },
     { text: '成员管理', path: 'PermissionMember' },
-    { text: '操作日志', path: 'PermissionList' },
+    // { text: '操作日志', path: 'PermissionList' },
   ];
 </script>
 

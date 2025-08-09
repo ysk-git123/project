@@ -18,6 +18,7 @@ const verifyAccessToken = require("../../middlewarelzy/verifyAccessToken");
 router.post("/login", async (req, res, next) => {
   try {
     const { username, password } = req.body;
+    console.log("username: " + username, "password: " + password);
     if (!username || !password) {
       return res.send({
         code: 400,
@@ -33,7 +34,6 @@ router.post("/login", async (req, res, next) => {
       // console.log(authority);
       const merchantCode = authority?.merchantCode || "default_merchant";
       const { accessToken, refreshToken } = generateTokens(user, merchantCode);
-      // console.log("accessToken: ", accessToken, "refreshToken: ", refreshToken);
       return res.send({
         code: 200,
         msg: "登录成功",
@@ -46,11 +46,6 @@ router.post("/login", async (req, res, next) => {
           refreshToken: refreshToken,
         },
       });
-    } else {
-      return res.send({
-        code: 401,
-        msg: "用户名或密码错误",
-      });
     }
   } catch (error) {
     return res.send({
@@ -60,6 +55,66 @@ router.post("/login", async (req, res, next) => {
     });
   }
 });
+
+// 提交用户角色信息LoginApp
+router.post("/addlogin", async (req, res, next) => {
+  try {
+    const { user, pass, relo } = req.body;
+    console.log("user: " + user, "pass: " + pass, "relo: " + relo);
+    // 检查必要参数
+    if (!user || !pass) {
+      return res.send({
+        code: 400,
+        msg: "用户名和密码不能为空",
+      });
+    }
+
+    // 检查用户是否已存在
+    const existingUser = await LoginApp.findOne({ username: user });
+    if (existingUser) {
+      return res.send({
+        code: 400,
+        msg: "该用户已存在",
+      });
+    }
+
+    // 创建新用户
+    await LoginApp.create({ username: user, pass: pass });
+    return res.send({
+      code: 200,
+      msg: "注册成功",
+    });
+  } catch (error) {
+    return res.send({
+      code: 500,
+      msg: "服务器错误",
+      error: error.message,
+    });
+  }
+});
+
+// 提交用户角色信息AuthorityApp
+router.post(
+  "/addauthority",
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res, next) => {
+    try {
+      const { username, Authoritys, merchantCode } = req.body;
+      console.log(
+        "username: " + username,
+        "Authoritys: " + Authoritys,
+        "merchantCode: " + merchantCode
+      );
+    } catch (error) {
+      return res.send({
+        code: 500,
+        msg: "服务器错误",
+        error: error.message,
+      });
+    }
+  }
+);
 
 // 刷新令牌接口
 router.post("/refreshToken", refreshTokenController);
@@ -86,12 +141,10 @@ router.get(
     try {
       // 从请求对象中获取商家编号
       const merchantCode = req.merchantCode;
-      // console.log('刘振言',merchantCode);
       // 查询与商家编号匹配的Context数据
       const contextData = await ContextApp.find({
         sjMerchantCode: merchantCode,
       });
-      // console.log(contextData);
       return res.json({
         code: 200,
         msg: "查询成功",
@@ -114,9 +167,9 @@ router.get(
   async (req, res, next) => {
     try {
       const merchantCode = req.merchantCode;
-      console.log("商家编号", merchantCode);
+      // console.log("商家编号", merchantCode);
       const listData = await ListApp.find({ Merchant: merchantCode });
-      console.log("商家产品", listData);
+      // console.log("商家产品", listData);
       return res.json({
         code: 200,
         msg: "查询成功",
@@ -144,7 +197,7 @@ router.get(
         merchantCode: req.merchantCode || req.query.merchantCode,
       };
       const roleData = await AuthorityApp.find(query);
-      console.log(roleData);
+      // console.log(roleData);
       return res.json({
         code: 200,
         msg: "查询成功",
@@ -154,6 +207,113 @@ router.get(
       return res.status(500).json({
         code: 500,
         msg: "服务器错误",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// 添加角色
+router.post(
+  "/roleAdd",
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res, next) => {
+    try {
+      const { merchantCode, userAM, Authoritys } = req.body;
+      console.log(merchantCode, userAM, Authoritys);
+      return res.json({
+        code: 200,
+        msg: "添加成功",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        code: 500,
+        msg: "服务器错误",
+        error: err.message,
+      });
+    }
+  }
+);
+
+// 删除角色
+router.post(
+  "/roleDelete",
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res, next) => {
+    try {
+      const { id, merchantCode } = req.query;
+      console.log(id, merchantCode);
+      return res.json({
+        code: 200,
+        msg: "删除成功",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        code: 500,
+        msg: "服务器错误",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// 渲染LoginApp
+router.get("/getLoginApp", async (req, res) => {
+  const data = await LoginApp.find();
+  return res.send({
+    code: 200,
+    msg: "查询成功",
+    data,
+  });
+});
+router.post(
+  '/getAddRole',
+  verifyAccessToken,
+  dataIsolationMiddleware,
+  async (req, res) => {
+    try {
+      const { merchantCode, userAM, Authoritys, username } = req.body;
+
+      // 检查必要参数
+      if (!merchantCode || !userAM || !Authoritys || !username) {
+        return res.send({
+          code: 400,
+          msg: '缺少必要参数',
+        });
+      }
+
+      // 检查该商家的用户是否已经有权限记录
+      const existingAuthority = await AuthorityApp.findOne({
+        merchantCode: merchantCode,
+        userAM: userAM,
+      });
+
+      if (existingAuthority) {
+        return res.send({
+          code: 400,
+          msg: '该用户已有权限，不能再设置其它的权限',
+        });
+      }
+
+      // 创建新的权限记录
+      await AuthorityApp.create({
+        userAM,
+        username,
+        Authoritys,
+        merchantCode,
+      });
+
+      return res.send({
+        code: 200,
+        msg: '提交成功',
+      });
+    } catch (error) {
+      console.error('添加权限失败:', error);
+      return res.send({
+        code: 500,
+        msg: '服务器错误',
         error: error.message,
       });
     }

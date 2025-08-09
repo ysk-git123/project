@@ -25,7 +25,7 @@ service.interceptors.request.use(
     if (accessToken) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${accessToken}`;
-      console.log('添加Authorization头:', config.headers.Authorization);
+      // console.log('添加Authorization头:', config.headers.Authorization);
     } else {
       console.warn('未找到accessToken');
     }
