@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h2 class="page-title">退款申请</h2>
+    <h2 class="page-title">
+      退款申请
+    </h2>
   </div>
 </template>
 

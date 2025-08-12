@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SideBar, Card, Image, Tag, List, InfiniteScroll, Toast, SpinLoading } from 'antd-mobile';
 import { GET } from '../../Axios/api';
 import styles from './ModuleCSS/Classify.module.css';
@@ -29,41 +30,10 @@ const useCategoryProducts = () => {
     const [hasMore, setHasMore] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState<string | null>(null);
+    const [dataLoaded, setDataLoaded] = useState(false); // 记录数据是否已加载
     const pageSize = 10;
 
-    // 生成模拟商品数据
-    const generateMockProducts = useCallback((category: string, page: number, size: number): Product[] => {
-        const categoryNames = {
-            'all': '商品',
-            'T恤': 'T恤',
-            '外套': '外套',
-            '皮衣': '皮衣',
-            '睡衣': '睡衣',
-            '短袖': '短袖',
-            '短裤': '短裤',
-            '羽绒服': '羽绒服',
-            '衬衫': '衬衫',
-            '西装': '西装',
-            '运动装': '运动装',
-            '连衣裙': '连衣裙',
-            '配饰': '配饰',
-            '针织衫': '针织衫',
-            '长裤': '长裤',
-            '风衣': '风衣'
-        };
 
-        const colors = ['黑色', '白色', '灰色', '蓝色', '红色', '绿色', '黄色', '粉色'];
-        const prices = [59.9, 79.9, 89.9, 99.9, 129.9, 159.9, 189.9, 299.9, 399.9, 599.9];
-
-        return Array.from({ length: size }, (_, index) => ({
-            _id: `${category}_${page}_${index}`,
-            name: `${categoryNames[category as keyof typeof categoryNames] || category}商品${page * size + index + 1}`,
-            image: `https://images.unsplash.com/photo-${1500000000000 + (page * size + index)}?w=400`,
-            price: prices[Math.floor(Math.random() * prices.length)],
-            color: [colors[Math.floor(Math.random() * colors.length)]],
-            category: category
-        }));
-    }, []);
 
     // 获取分类商品数据
     const fetchCategoryProducts = useCallback(async (category: string, page = 1, isLoadMore = false) => {
@@ -86,26 +56,16 @@ const useCategoryProducts = () => {
                 setCurrentPage(pagination.current);
                 setHasMore(pagination.hasMore);
             } else {
-                // 如果API返回失败，使用模拟数据
-                const mockProducts = generateMockProducts(category, page, pageSize);
-                setAllProducts(prev => ({
-                    ...prev,
-                    [category]: isLoadMore ? [...(prev[category] || []), ...mockProducts] : mockProducts
-                }));
+                // 如果API返回失败，显示错误信息
+                setError('获取商品数据失败');
             }
         } catch (error) {
             console.error('获取商品失败:', error);
-            setError('获取商品数据失败，已加载模拟数据');
-            // 使用模拟数据
-            const mockProducts = generateMockProducts(category, page, pageSize);
-            setAllProducts(prev => ({
-                ...prev,
-                [category]: isLoadMore ? [...(prev[category] || []), ...mockProducts] : mockProducts
-            }));
+            setError('获取商品数据失败');
         } finally {
             setLoading(false);
         }
-    }, [generateMockProducts, pageSize]);
+    }, [pageSize]);
 
     // 从后端获取分类数据
     const fetchCategories = useCallback(async () => {
@@ -127,16 +87,19 @@ const useCategoryProducts = () => {
                 await Promise.all(formattedCategories.map(cat => 
                     fetchCategoryProducts(cat.key, 1, false)
                 ));
+                setDataLoaded(true); // 标记数据已加载
             } else {
                 Toast.show('获取分类失败');
                 setCategories([{ key: 'all', title: '全部' }]);
                 setError('获取分类失败，已加载默认分类');
+                setDataLoaded(true); // 即使失败也标记为已加载，避免重复请求
             }
         } catch (error) {
             console.error('获取分类失败:', error);
             Toast.show('获取分类失败');
             setCategories([{ key: 'all', title: '全部' }]);
             setError('获取分类失败，已加载默认分类');
+            setDataLoaded(true); // 即使失败也标记为已加载，避免重复请求
         }
     }, [fetchCategoryProducts]);
 
@@ -158,11 +121,13 @@ const useCategoryProducts = () => {
         pageSize,
         fetchCategories,
         fetchCategoryProducts,
-        loadMore
+        loadMore,
+        dataLoaded
     };
 };
 
 export default function Classify() {
+    const navigate = useNavigate();
     const {
         categories,
         activeKey,
@@ -173,10 +138,18 @@ export default function Classify() {
         error,
         loadMore,
         fetchCategories,
-        fetchCategoryProducts
+        fetchCategoryProducts,
+        dataLoaded
     } = useCategoryProducts();
     
     const mainRef = useRef<HTMLDivElement>(null);
+
+    // 处理商品点击事件
+    const handleProductClick = (product: Product) => {
+        navigate(`/shoppdetail`, { 
+            state: { product } 
+        });
+    };
 
     // 切换分类 - 使用useCallback优化性能
     const handleCategoryChange = useCallback((key: string) => {
@@ -218,8 +191,10 @@ export default function Classify() {
 
     // 初始化加载分类数据
     useEffect(() => {
-        fetchCategories();
-    }, [fetchCategories]);
+        if (!dataLoaded) {
+            fetchCategories();
+        }
+    }, [fetchCategories, dataLoaded]);
 
     // 添加滚动事件监听
     useEffect(() => {
@@ -235,7 +210,10 @@ export default function Classify() {
     // 使用useMemo优化商品卡片组件
     const ProductCard = useMemo(() => {
         return ({ product }: { product: Product }) => (
-            <Card className={styles.productCard}>
+            <Card 
+                className={styles.productCard}
+                onClick={() => handleProductClick(product)}
+            >
                 <div className={styles.productContent}>
                     <Image 
                         src={product.image} 

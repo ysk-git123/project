@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GET, DELETE } from '../../Axios/api';
-import './CustomerService.moudle..css';
+import './modules.css/CustomerService.moudle..css';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -50,8 +50,8 @@ const CustomerService: React.FC = () => {
     const loadChatHistory = async (sessionId: string) => {
         try {
             const response = await GET(`/YJL/chat/history/${sessionId}`);
-            if (response.messages) {
-                setMessages(response.messages.map((msg: any) => ({
+            if (response.data?.messages) {
+                setMessages(response.data.messages.map((msg: any) => ({
                     ...msg,
                     timestamp: new Date(msg.timestamp)
                 })));
@@ -65,7 +65,7 @@ const CustomerService: React.FC = () => {
     const loadSessions = async () => {
         try {
             const response = await GET('/YJL/chat/sessions');
-            setSessions(response.sessions || []);
+            setSessions(response.data?.sessions || []);
         } catch (error) {
             console.error('加载会话列表失败:', error);
         }

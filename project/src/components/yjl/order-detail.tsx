@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getUser } from '../../utils/auth';
-import { getMockOrders, OrderStatus } from '../../utils/orderData';
+import { OrderStatus } from '../../utils/orderData';
 import type { Order, OrderStatusType } from '../../utils/orderData';
-import './order-detail.moudle.css';
+import './modules.css/order-detail.moudle.css';
 
 // 用户信息接口
 interface UserInfo {
@@ -18,7 +18,7 @@ interface UserInfo {
 const OrderDetail: React.FC = () => {
     const navigate = useNavigate();
     const { orderId } = useParams<{ orderId: string }>();
-    
+
     const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
@@ -39,14 +39,11 @@ const OrderDetail: React.FC = () => {
             // 尝试从API获取订单详情
             if (currentUser && orderId) {
                 try {
-                    console.log('正在获取订单详情:', orderId);
-                    const response = await fetch(`http://localhost:3000/YJL/order/${orderId}`);
-                    console.log('API响应状态:', response.status);
-                    
+                    const response = await fetch(`http://localhost:3000/YJL/order/${orderId}?username=${encodeURIComponent(currentUser.username)}`);
+
                     if (response.ok) {
                         const result = await response.json();
-                        console.log('API响应数据:', result);
-                        
+
                         if (result.code === 200 && result.data) {
                             setOrder(result.data);
                             return;
@@ -57,33 +54,12 @@ const OrderDetail: React.FC = () => {
                         console.warn('API请求失败，状态码:', response.status);
                     }
                 } catch (error) {
-                    console.warn('获取在线订单详情失败，使用模拟数据:', error);
+                    console.warn('获取在线订单详情失败:', error);
                 }
             }
 
-            // 回退到模拟数据
-            console.log('使用模拟数据');
-            const mockOrders = getMockOrders();
-            
-            // 如果是MongoDB ObjectId格式，尝试使用模拟订单
-            if (orderId && orderId.length === 24) {
-                // 这是MongoDB ObjectId格式，使用第一个模拟订单
-                console.log('检测到MongoDB ObjectId格式，使用模拟订单');
-                setOrder(mockOrders[0]);
-                return;
-            }
-            
-            const foundOrder = mockOrders.find(o => o.id === orderId);
-            
-            if (foundOrder) {
-                console.log('找到模拟订单:', foundOrder);
-                setOrder(foundOrder);
-            } else {
-                console.warn('未找到订单:', orderId);
-                // 如果找不到订单，使用第一个模拟订单作为演示
-                console.log('使用第一个模拟订单作为演示');
-                setOrder(mockOrders[0]);
-            }
+            // 如果获取订单失败，显示错误信息
+            setError('获取订单详情失败');
 
         } catch (error) {
             console.error('获取订单详情失败:', error);
@@ -109,8 +85,8 @@ const OrderDetail: React.FC = () => {
                 return '已付款';
             case OrderStatus.SHIPPED:
                 return '已发货';
-            case OrderStatus.DELIVERED:
-                return '已送达';
+            case OrderStatus.RECEIVED:
+                return '已收货';
             case OrderStatus.CANCELLED:
                 return '已取消';
             case OrderStatus.PAYMENT_FAILED:
@@ -129,8 +105,8 @@ const OrderDetail: React.FC = () => {
                 return 'status-paid';
             case OrderStatus.SHIPPED:
                 return 'status-shipped';
-            case OrderStatus.DELIVERED:
-                return 'status-delivered';
+            case OrderStatus.RECEIVED:
+                return 'status-received';
             case OrderStatus.CANCELLED:
                 return 'status-cancelled';
             case OrderStatus.PAYMENT_FAILED:
@@ -145,46 +121,67 @@ const OrderDetail: React.FC = () => {
         if (!order) return;
 
         try {
-            // 这里可以调用相应的API
-            console.log(`执行订单操作: ${action}`, order.id);
-            
-            // 根据操作类型执行不同逻辑
             switch (action) {
-                case 'pay':
-                    navigate('/payment', { 
-                        state: { 
-                            orderId: order.id,
-                            amount: order.totalAmount,
-                            returnUrl: `/order-detail/${order.id}`
-                        } 
-                    });
-                    break;
                 case 'cancel':
                     if (confirm('确定要取消这个订单吗？')) {
-                        // 调用取消订单API
-                        console.log('取消订单:', order.id);
-                        // 刷新订单详情
-                        fetchOrderDetail();
+                        try {
+                            const response = await fetch(`http://localhost:3000/YJL/order/cancel/${order.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                                }
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                if (result.code === 200) {
+                                    alert('订单取消成功！');
+                                    navigate('/myorder');
+                                } else {
+                                    alert(`取消失败: ${result.message}`);
+                                }
+                            } else {
+                                alert('取消订单失败，请重试');
+                            }
+                        } catch (error) {
+                            console.error('取消订单失败:', error);
+                            alert('网络错误，请重试');
+                        }
                     }
                     break;
+
                 case 'confirm':
-                    if (confirm('确认已收到商品吗？')) {
-                        // 调用确认收货API
-                        console.log('确认收货:', order.id);
-                        // 刷新订单详情
-                        fetchOrderDetail();
+                    if (confirm('确认收货吗？')) {
+                        try {
+                            const response = await fetch(`http://localhost:3000/YJL/order/confirm/${order.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                                }
+                            });
+
+                            if (response.ok) {
+                                const result = await response.json();
+                                if (result.code === 200) {
+                                    alert('确认收货成功！订单状态已更新为已收货。');
+                                    navigate('/myorder');
+                                } else {
+                                    alert(`确认收货失败: ${result.message}`);
+                                }
+                            } else {
+                                alert('确认收货失败，请重试');
+                            }
+                        } catch (error) {
+                            console.error('确认收货失败:', error);
+                            alert('网络错误，请重试');
+                        }
                     }
                     break;
-                case 'refund':
-                    navigate('/refund', { 
-                        state: { 
-                            orderId: order.id,
-                            order: order
-                        } 
-                    });
-                    break;
+
                 default:
-                    break;
+                    console.warn('未知操作:', action);
             }
         } catch (error) {
             console.error('订单操作失败:', error);
@@ -254,7 +251,7 @@ const OrderDetail: React.FC = () => {
                     {order.status === OrderStatus.PENDING_PAYMENT && '请在30分钟内完成支付'}
                     {order.status === OrderStatus.PAID && '商家正在处理您的订单'}
                     {order.status === OrderStatus.SHIPPED && '商品正在配送中'}
-                    {order.status === OrderStatus.DELIVERED && '订单已完成'}
+                    {order.status === OrderStatus.RECEIVED && '订单已完成'}
                     {order.status === OrderStatus.CANCELLED && '订单已取消'}
                     {order.status === OrderStatus.PAYMENT_FAILED && '支付失败，请重新支付'}
                 </p>
@@ -361,42 +358,42 @@ const OrderDetail: React.FC = () => {
             <div className="action-buttons">
                 {order.status === OrderStatus.PENDING_PAYMENT && (
                     <>
-                        <button 
-                            onClick={() => handleOrderAction('pay')} 
+                        <button
+                            onClick={() => handleOrderAction('pay')}
                             className="action-btn primary"
                         >
                             立即支付
                         </button>
-                        <button 
-                            onClick={() => handleOrderAction('cancel')} 
+                        <button
+                            onClick={() => handleOrderAction('cancel')}
                             className="action-btn secondary"
                         >
                             取消订单
                         </button>
                     </>
                 )}
-                
+
                 {order.status === OrderStatus.SHIPPED && (
-                    <button 
-                        onClick={() => handleOrderAction('confirm')} 
+                    <button
+                        onClick={() => handleOrderAction('confirm')}
                         className="action-btn primary"
                     >
                         确认收货
                     </button>
                 )}
-                
-                {order.status === OrderStatus.DELIVERED && (
-                    <button 
-                        onClick={() => handleOrderAction('refund')} 
+
+                {order.status === OrderStatus.RECEIVED && (
+                    <button
+                        onClick={() => handleOrderAction('refund')}
                         className="action-btn secondary"
                     >
                         申请退款
                     </button>
                 )}
-                
+
                 {(order.status === OrderStatus.PAID || order.status === OrderStatus.SHIPPED) && (
-                    <button 
-                        onClick={() => handleOrderAction('cancel')} 
+                    <button
+                        onClick={() => handleOrderAction('cancel')}
                         className="action-btn secondary"
                     >
                         申请退款
@@ -407,4 +404,4 @@ const OrderDetail: React.FC = () => {
     );
 };
 
-export default OrderDetail;
+export default OrderDetail; 

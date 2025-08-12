@@ -396,7 +396,6 @@ export default function Shou() {
   // 商品卡片
   const ProductCard = ({ product }: { product: Product }) => (
     <Card className={styles['product-card']} onClick={() => {
-      console.log('跳转到商品详情，商品:', product);
       navigate(`/shoppdetail`, { state: { product: product } })
     }}>
       <div className={styles['product-image']}>

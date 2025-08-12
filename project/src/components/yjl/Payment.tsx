@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Payment.moudle.css';
+import './modules.css/Payment.moudle.css';
 import { useCart } from '../../utils/CartContext';
 
 interface PaymentProps {
@@ -70,7 +70,7 @@ const Payment: React.FC<PaymentProps> = ({
                         
                         // 支付成功后清空购物车
                         clearCart();
-                        showMessage('支付成功！购物车已清空', 'success');
+                        // 支付成功，静默处理
                         
                         if (onPaymentSuccess) {
                             onPaymentSuccess(result.data!.orderNo);
@@ -150,9 +150,6 @@ const Payment: React.FC<PaymentProps> = ({
                         disabled={loading}
                     >
                         <option value="38.88">VIP会员 - ¥38.88</option>
-                        <option value="0.01">测试支付 - ¥0.01</option>
-                        <option value="1.00">小额测试 - ¥1.00</option>
-                        <option value="10.00">中额测试 - ¥10.00</option>
                     </select>
                 </div>
 
@@ -207,9 +204,7 @@ const Payment: React.FC<PaymentProps> = ({
                 <div className="payment-tips">
                     <h4>💡 支付说明</h4>
                     <ul>
-                        <li>支持支付宝沙箱环境测试</li>
                         <li>支付完成后自动开通VIP会员</li>
-                        <li>测试账号请使用沙箱买家账号</li>
                         <li>如有问题请联系客服</li>
                     </ul>
                 </div>

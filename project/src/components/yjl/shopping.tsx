@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './shopping.module.css';
+import styles from './modules.css/shopping.module.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getUser } from '../../utils/auth';
 import AddressSelector from './AddressSelector';
@@ -24,9 +24,6 @@ const Shopping: React.FC = () => {
     const orderData = location.state?.orderItems;
     const fromCart = location.state?.fromCart || false;
     
-    console.log('接收到的订单数据:', orderData);
-    console.log('是否来自购物车:', fromCart);
-    
     // 状态管理
     const [orderItems] = useState<OrderItem[]>(orderData || []);
     const [isPaymentLoading, setIsPaymentLoading] = useState(false);
@@ -37,6 +34,7 @@ const Shopping: React.FC = () => {
         id: string;
         username?: string;
         name?: string;
+        merchantCode?: string;
     }
 
     // 定义地址类型
@@ -63,6 +61,13 @@ const Shopping: React.FC = () => {
         district: '昌平区',
         detail: '回龙观大街小区31号'
     });
+    
+    // 接收路由传递的订单数据
+    useEffect(() => {
+        if (location.state) {
+            // 处理路由传递的数据
+        }
+    }, [location.state]);
     
     // 获取购物车上下文
     const { clearCart } = useCart();
@@ -110,6 +115,7 @@ const Shopping: React.FC = () => {
             const orderData = {
                 userId: currentUser.id,
                 username: currentUser.username || currentUser.name || `用户_${currentUser.id}`,
+                merchantCode: currentUser.merchantCode || 'MER001',
                 items: orderItems,
                 totalAmount: totalPrice,
                 address: selectedAddress,
@@ -117,7 +123,10 @@ const Shopping: React.FC = () => {
                 message: buyerMessage
             };
 
-            // 首先创建订单记录（可选，如果后端支持）
+            let orderNo = null;
+            let orderId = null;
+
+            // 首先创建详细订单记录
             try {
                 const createOrderResponse = await fetch('http://localhost:3000/YJL/create-order', {
                     method: 'POST',
@@ -129,16 +138,36 @@ const Shopping: React.FC = () => {
                 
                 if (createOrderResponse.ok) {
                     const orderResult = await createOrderResponse.json();
-                    console.log('订单创建成功:', orderResult);
+                    if (orderResult.code === 200) {
+                        // 订单创建成功
+                        alert('订单创建成功！');
+                        
+                        // 清空购物车
+                        if (fromCart) {
+                            clearCart();
+                        }
+                        
+                        // 跳转到订单页面
+                        navigate('/myorder');
+                    } else {
+                        alert(`订单创建失败: ${orderResult.message}`);
+                    }
+                } else {
+                    console.error('创建详细订单失败:', await createOrderResponse.text());
                 }
             } catch (orderError) {
-                console.warn('创建订单记录失败，继续支付流程:', orderError);
+                console.error('创建详细订单记录失败:', orderError);
             }
             
             const amount = totalPrice.toFixed(2);
             const username = currentUser.username || currentUser.name || `用户_${currentUser.id}`;
             
-            const response = await fetch(`http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}`);
+            // 使用已创建的订单号进行支付
+            const payUrl = orderNo 
+                ? `http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}&orderNo=${orderNo}`
+                : `http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}`;
+            
+            const response = await fetch(payUrl);
             const result = await response.json();
             
             if (result.code === 200 && result.data) {
@@ -155,7 +184,7 @@ const Shopping: React.FC = () => {
                                 const statusResult = await statusResponse.json();
                                 if (statusResult.code === 200) {
                                     if (statusResult.data.status === 'success') {
-                                        alert('支付成功！订单已处理。');
+                                        // 支付成功，静默处理
                                         
                                         // 如果来自购物车，支付成功后清空购物车
                                         if (fromCart) {

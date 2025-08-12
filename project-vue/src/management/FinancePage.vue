@@ -1,5 +1,8 @@
 <template>
-  <MainLayout sidebar-title="财务" :nav-items="navItems" />
+  <MainLayout
+    sidebar-title="财务"
+    :nav-items="navItems"
+  />
 </template>
 
 <script setup lang="ts">

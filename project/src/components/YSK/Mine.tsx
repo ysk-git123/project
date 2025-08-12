@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     List,
     Avatar,
@@ -24,7 +24,7 @@ import styles from './ModuleCSS/Mine.module.css'
 import TabBar from './TabBar';
 import TokenManager from '../../utils/tokenManager';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getMockOrders, calculateOrderStats } from '../../utils/orderData';
+import { calculateOrderStats, OrderStatus } from '../../utils/orderData';
 
 interface UserInfo {
     id: string;
@@ -34,6 +34,7 @@ interface UserInfo {
     email: string;
     status: number;
     create_time: string;
+    merchantCode?: string;
 }
 
 interface OrderStats {
@@ -41,6 +42,23 @@ interface OrderStats {
     processing: number;
     shipped: number;
     completed: number;
+}
+
+// 订单接口
+interface Order {
+    id: string;
+    orderNumber: string;
+    userId: string;
+    items: any[];
+    totalAmount: number;
+    status: string;
+    createTime: string;
+    paymentTime?: string;
+    shippingTime?: string;
+    deliveryTime?: string;
+    address: any;
+    paymentMethod: string;
+    message?: string;
 }
 
 export default function Mine() {
@@ -78,42 +96,100 @@ export default function Mine() {
         }
     }, []);
 
+    // 映射后端状态到前端状态
+    const mapBackendStatusToFrontend = (backendStatus: string): string => {
+        switch (backendStatus) {
+            case 'pending':
+            case 'pending_payment':
+                return OrderStatus.PENDING_PAYMENT;
+            case 'processing':
+            case 'paid':
+            case 'success':
+            case 'completed_payment':
+                return OrderStatus.PAID;
+            case 'shipped':
+                return OrderStatus.SHIPPED;
+            case 'received':
+            case 'completed':
+                return OrderStatus.RECEIVED;
+            case 'cancelled':
+                return OrderStatus.CANCELLED;
+            case 'failed':
+            case 'payment_failed':
+                return OrderStatus.PAYMENT_FAILED;
+            default:
+                return OrderStatus.PENDING_PAYMENT;
+        }
+    };
+
     // 刷新订单统计数据
     const refreshOrderStats = async () => {
         if (!userInfo) return;
 
         setIsLoadingOrders(true);
         try {
-            // 首先尝试从API获取真实订单数据
-            const username = userInfo.username || userInfo.name || userInfo.id;
-            const response = await fetch(`http://localhost:3000/YJL/orders/${encodeURIComponent(username)}`);
-            
+            const username = userInfo.username || userInfo.id;
+
+            // 获取订单列表而不是统计
+            const response = await fetch(`http://localhost:3000/YJL/orders/${encodeURIComponent(username)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+
             if (response.ok) {
                 const result = await response.json();
+
                 if (result.code === 200 && result.data) {
-                    // 使用真实API数据计算统计
-                    const realStats = calculateOrderStats(result.data);
-                    setOrderStats(realStats);
-                    console.log('刷新真实订单数据:', realStats);
-                    return;
+                    // 转换后端数据格式为前端格式
+                    const convertedOrders = result.data.map((order: any) => {
+                        if (!order._id) {
+                            console.error('订单缺少_id字段:', order);
+                            return null;
+                        }
+
+                        // 状态映射
+                        const mappedStatus = mapBackendStatusToFrontend(order.status);
+
+                        return {
+                            id: order._id,
+                            orderNumber: order.orderNo,
+                            userId: order.userId,
+                            items: order.items || [],
+                            totalAmount: order.totalAmount,
+                            status: mappedStatus,
+                            createTime: order.createdAt,
+                            paymentTime: order.status === 'processing' || order.status === 'paid' ? order.updatedAt : undefined,
+                            shippingTime: order.status === 'shipped' ? order.updatedAt : undefined,
+                            deliveryTime: order.status === 'received' ? order.updatedAt : undefined,
+                            address: order.address || {},
+                            paymentMethod: order.paymentMethod || '支付宝',
+                            message: order.message || ''
+                        };
+                    }).filter(Boolean);
+
+                    // 使用前端统计计算函数
+                    const stats = calculateOrderStats(convertedOrders);
+                    setOrderStats(stats);
+                } else {
+                    console.warn('订单API返回错误:', result.message);
                 }
+            } else {
+                console.warn('订单API请求失败，状态码:', response.status);
             }
         } catch (error) {
-            console.warn('刷新真实订单数据失败，使用模拟数据:', error);
+            console.error('获取订单数据失败:', error);
+        } finally {
+            setIsLoadingOrders(false);
         }
-
-        // 如果API失败，回退到模拟数据
-        const mockOrders = getMockOrders();
-        const stats = calculateOrderStats(mockOrders);
-        setOrderStats(stats);
-        console.log('刷新模拟订单数据:', stats);
     };
 
     // 监听订单数据更新事件
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'orderDataUpdated' && userInfo && !isLoadingOrders) {
-                console.log('检测到订单数据更新，刷新统计');
                 refreshOrderStats();
             }
         };
@@ -124,7 +200,6 @@ export default function Mine() {
         // 也监听自定义事件（同一页面内的更新）
         const handleCustomUpdate = () => {
             if (userInfo && !isLoadingOrders) {
-                console.log('检测到同页面订单数据更新，刷新统计');
                 refreshOrderStats();
             }
         };
@@ -142,15 +217,13 @@ export default function Mine() {
         const handleFocus = () => {
             // 当页面重新获得焦点时，刷新订单数据
             if (userInfo && !isLoadingOrders) {
-                console.log('页面获得焦点，刷新订单数据');
                 refreshOrderStats();
             }
         };
 
-        // 监听页面可见性变化
         const handleVisibilityChange = () => {
-            if (!document.hidden && userInfo && !isLoadingOrders) {
-                console.log('页面变为可见，刷新订单数据');
+            // 当页面变为可见时，刷新订单数据
+            if (document.visibilityState === 'visible' && userInfo && !isLoadingOrders) {
                 refreshOrderStats();
             }
         };
@@ -166,39 +239,9 @@ export default function Mine() {
 
     // 获取订单统计
     useEffect(() => {
-        const fetchOrderStats = async () => {
-            if (!userInfo) return;
-
-            setIsLoadingOrders(true);
-            try {
-                // 首先尝试从API获取真实订单数据
-                const username = userInfo.username || userInfo.name || userInfo.id;
-                const response = await fetch(`http://localhost:3000/YJL/orders/${encodeURIComponent(username)}`);
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.code === 200 && result.data) {
-                        // 使用真实API数据计算统计
-                        const realStats = calculateOrderStats(result.data);
-                        setOrderStats(realStats);
-                        console.log('使用真实订单数据:', realStats);
-                        setIsLoadingOrders(false);
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.warn('获取真实订单数据失败，使用模拟数据:', error);
-            }
-
-            // 如果API失败，回退到模拟数据
-            const mockOrders = getMockOrders();
-            const stats = calculateOrderStats(mockOrders);
-            setOrderStats(stats);
-            console.log('使用模拟订单数据:', stats);
-            setIsLoadingOrders(false);
-        };
-
-        fetchOrderStats();
+        if (userInfo) {
+            refreshOrderStats();
+        }
     }, [userInfo]); // 依赖userInfo，当用户信息变化时重新获取
 
     // 处理退出登录
@@ -325,22 +368,7 @@ export default function Mine() {
                 <div className={styles.orderHeader}>
                     <span className={styles.orderTitle}>我的订单</span>
                     <div className={styles.orderActions}>
-                        <div 
-                            className={styles.refreshBtn}
-                            onClick={() => {
-                                refreshOrderStats();
-                                setIsLoadingOrders(false);
-                            }}
-                            style={{ 
-                                cursor: 'pointer', 
-                                marginRight: '12px',
-                                color: isLoadingOrders ? '#ccc' : '#007AFF',
-                                transition: 'color 0.3s'
-                            }}
-                        >
-                            {isLoadingOrders ? '刷新中...' : '🔄'}
-                        </div>
-                        <div 
+                        <div
                             className={styles.orderMore}
                             onClick={() => navigate('/myorder')}
                             style={{ cursor: 'pointer' }}
@@ -350,33 +378,25 @@ export default function Mine() {
                         </div>
                     </div>
                 </div>
-                {isLoadingOrders ? (
-                    <div className={styles.orderLoading}>
-                        <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                            ⏳ 加载订单数据中...
-                        </div>
-                    </div>
-                ) : (
-                    <div className={styles.orderStats}>
-                        {menuItems.map((item, index) => (
-                            <div
-                                key={index}
-                                className={styles.orderItem}
-                                onClick={item.onClick}
-                            >
-                                <div className={styles.orderIcon}>
-                                    {item.icon}
-                                    {item.badge > 0 && (
-                                        <span className={styles.badge}>
-                                            {item.badge > 99 ? '99+' : item.badge}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className={styles.orderText}>{item.title}</span>
+                <div className={styles.orderStats}>
+                    {menuItems.map((item, index) => (
+                        <div
+                            key={`order-${item.title}-${index}`}
+                            className={styles.orderItem}
+                            onClick={item.onClick}
+                        >
+                            <div className={styles.orderIcon}>
+                                {item.icon}
+                                {item.badge > 0 && (
+                                    <span className={styles.badge}>
+                                        {item.badge > 99 ? '99+' : item.badge}
+                                    </span>
+                                )}
                             </div>
-                        ))}
-                    </div>
-                )}
+                            <span className={styles.orderText}>{item.title}</span>
+                        </div>
+                    ))}
+                </div>
             </Card>
 
             {/* 服务功能 */}
@@ -387,7 +407,7 @@ export default function Mine() {
                 <div className={styles.serviceGrid}>
                     {serviceItems.map((item, index) => (
                         <div
-                            key={index}
+                            key={`service-${item.title}-${index}`}
                             className={styles.serviceItem}
                         >
                             <div className={styles.serviceIcon}>{item.icon}</div>
@@ -402,7 +422,7 @@ export default function Mine() {
                 <List>
                     {settingItems.map((item, index) => (
                         <List.Item
-                            key={index}
+                            key={`setting-${item.title}-${index}`}
                             prefix={item.icon}
                             onClick={item.onClick}
                             arrow={<RightOutline />}

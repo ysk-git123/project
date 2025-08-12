@@ -23,7 +23,6 @@ module.exports = {
     'eslint:recommended',
     'plugin:vue/vue3-recommended', // Vue3推荐规则
     'plugin:@typescript-eslint/recommended', // TypeScript推荐规则
-    'plugin:prettier/recommended', // 整合Prettier（最后加载，覆盖冲突规则）
   ],
   plugins: [
     '@typescript-eslint', // 显式声明TypeScript插件

@@ -19,11 +19,8 @@ function App() {
       <h1>项目导航</h1>
       <div className="card">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-          <a href="/test-order" style={{ color: '#646cff', textDecoration: 'none' }}>
-            📊 带徽章的订单栏效果
-          </a>
           <a href="/map" style={{ color: '#646cff', textDecoration: 'none' }}>
-            🗺️ 地图功能测试 (更新API Key)
+            🗺️ 地图功能
           </a>
           <a href="/shopping" style={{ color: '#646cff', textDecoration: 'none' }}>
             🛒 购物页面
@@ -42,11 +39,11 @@ function App() {
           count is {count}
         </button>
         <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+          Edit <code>src/App.tsx</code> and save to reload
         </p>
       </div>
       <p className="read-the-docs">
-        🗝️ 高德地图API Key已更新，现在可以测试地图功能
+        🗝️ 高德地图API Key已更新，现在可以使用地图功能
       </p>
     </>
   )

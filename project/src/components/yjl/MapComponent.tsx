@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button, Toast, SearchBar, DotLoading, NavBar } from "antd-mobile";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AimOutlined } from "@ant-design/icons";
-import "./MapComponent.module.css";
+import "./modules.css/MapComponent.module.css";
 import { loadAMapScript, getCurrentPosition, reverseGeocode } from "../../utils/mapUtils";
 
 // 直接在这里定义Position类型，避免导入问题

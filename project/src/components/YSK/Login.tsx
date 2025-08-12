@@ -45,8 +45,6 @@ export default function Login() {
         // 使用 TokenManager 保存 token 和用户信息
         TokenManager.setTokens(data.data!.accessToken, data.data!.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data!.user));
-        console.log(data.data!.user);
-        
         
         message.success('登录成功！正在跳转...');
         

@@ -13,7 +13,11 @@
           class="demo-ruleForm"
         >
           <el-form-item prop="username">
-            <el-input v-model="ruleForm.username" placeholder="请输入用户名" autocomplete="off" />
+            <el-input
+              v-model="ruleForm.username"
+              placeholder="请输入用户名"
+              autocomplete="off"
+            />
           </el-form-item>
           <el-form-item prop="pass">
             <el-input
@@ -24,15 +28,23 @@
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" class="dl_btn" @click="submitForm(ruleFormRef)">
+            <el-button
+              type="primary"
+              class="dl_btn"
+              @click="submitForm(ruleFormRef)"
+            >
               登录
             </el-button>
           </el-form-item>
         </el-form>
       </div>
       <div class="link-container">
-        <p @click="HandeRegister">注册</p>
-        <p @click="HandeForget">忘记密码</p>
+        <p @click="HandeRegister">
+          注册
+        </p>
+        <p @click="HandeForget">
+          忘记密码
+        </p>
       </div>
     </div>
   </div>

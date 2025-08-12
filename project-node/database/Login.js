@@ -14,7 +14,8 @@ const userSchema = mongoose.Schema({            // 用户表
   create_time: {            // 创建时间
     type: Date,
     default: Date.now
-  }
+  },
+  merchantCode: String,
 })
 const userModel = mongoose.model('user', userSchema, 'user')
 

@@ -1,5 +1,8 @@
 <template>
-  <MainLayout sidebar-title="权限" :nav-items="navItems" />
+  <MainLayout
+    sidebar-title="权限"
+    :nav-items="navItems"
+  />
 </template>
 
 <script setup lang="ts">

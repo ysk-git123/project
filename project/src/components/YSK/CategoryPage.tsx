@@ -61,7 +61,6 @@ export default function CategoryPage() {
 
         setCurrentPage(pagination.current);
         setHasMore(pagination.hasMore);
-        console.log(`${category}分类第${page}页商品:`, list);
       }
     } catch (error) {
       console.error('获取商品失败:', error);
@@ -93,8 +92,7 @@ export default function CategoryPage() {
     <Card 
       className={styles['product-card']}
       onClick={() => {
-        console.log('跳转到商品详情，商品:', product);
-        navigate(`/shoppdetail`, { state: { product: product } });
+        navigate('/shoppdetail', { state: { productData: product } });
       }}
     >
       <div className={styles['product-image']}>

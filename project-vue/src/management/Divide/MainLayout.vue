@@ -1,13 +1,19 @@
 <template>
   <el-container>
-    <Sidebar :title="sidebarTitle" :nav-items="navItems" @item-click="handleItemClick" />
+    <Sidebar
+      :title="sidebarTitle"
+      :nav-items="navItems"
+      @item-click="handleItemClick"
+    />
     <div class="main-container">
       <Header
         :current-title="currentTitle"
         :current-theme="currentTheme"
         @toggle-theme="toggleTheme"
       />
-      <el-main class="main"><router-view></router-view></el-main>
+      <el-main class="main">
+        <router-view />
+      </el-main>
     </div>
   </el-container>
 </template>

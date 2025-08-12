@@ -1,9 +1,30 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const JWT = require('jsonwebtoken');
+const { userModel } = require('../../database/Login');
+const { shopModel } = require('../../database/shop');
+const mongoose = require('mongoose');
+const tokenConfig = require('../../middlewarelzy/authConfig');
 
-var { userModel } = require('../../database/Login')
-var { shopModel } = require('../../database/shop')
-var JWT = require('jsonwebtoken')
+
+// 购物车模型
+const cartSchema = new mongoose.Schema({
+    merchantCode: { type: String, required: true },
+    userId: { type: String, required: true },
+    items: [{
+        productId: { type: String, required: true },
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        image: { type: String, required: true },
+        color: { type: String, required: true },
+        size: { type: String, required: true },
+        quantity: { type: Number, required: true, default: 1 }
+    }],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const CartModel = mongoose.model('Cart', cartSchema);
 
 router.post('/login', async (req, res) => {
     try {
@@ -25,14 +46,14 @@ router.post('/login', async (req, res) => {
                 userId: user._id,
                 username: user.username,
             },
-            'access_secret',
-            { expiresIn: '15m' }
+            tokenConfig.secrets.accessToken,
+            { expiresIn: tokenConfig.expiresIn.accessToken }
         );
 
         const refreshToken = JWT.sign(
             { userId: user._id },
-            'refresh_secret',
-            { expiresIn: '7d' }
+            tokenConfig.secrets.refreshToken,
+            { expiresIn: tokenConfig.expiresIn.refreshToken }
         );
 
         res.json({
@@ -46,7 +67,8 @@ router.post('/login', async (req, res) => {
                     image: user.image,
                     phone: user.phone,
                     email: user.email,
-                    create_time: user.create_time
+                    create_time: user.create_time,
+                    merchantCode: user.merchantCode
                 },
                 accessToken,
                 refreshToken
@@ -75,7 +97,7 @@ router.post('/refresh', async (req, res) => {
         }
 
         // 验证刷新令牌
-        const decoded = JWT.verify(refreshToken, 'refresh_secret');
+        const decoded = JWT.verify(refreshToken, tokenConfig.secrets.refreshToken);
         const user = await userModel.findById(decoded.userId)
 
         if (!user || user.status === 0) {
@@ -84,7 +106,6 @@ router.post('/refresh', async (req, res) => {
                 message: '用户不存在或已被禁用'
             });
         }
-
 
         // 生成新的访问令牌
         const newAccessToken = JWT.sign(
@@ -96,8 +117,8 @@ router.post('/refresh', async (req, res) => {
                 email: user.email,
                 create_time: user.create_time
             },
-            'access_secret',
-            { expiresIn: '15m' }
+            tokenConfig.secrets.accessToken,
+            { expiresIn: tokenConfig.expiresIn.accessToken }
         );
 
         res.json({
@@ -204,7 +225,7 @@ router.get('/shop/categories', async (req, res) => {
 router.get('/user/profile', async (req, res) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
-        
+
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -232,7 +253,8 @@ router.get('/user/profile', async (req, res) => {
                 image: user.image,
                 phone: user.phone,
                 email: user.email,
-                create_time: user.create_time
+                create_time: user.create_time,
+                merchantCode: user.merchantCode
             }
         });
     } catch (error) {
@@ -248,7 +270,7 @@ router.get('/user/profile', async (req, res) => {
 router.put('/user/profile', async (req, res) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
-        
+
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -261,9 +283,9 @@ router.put('/user/profile', async (req, res) => {
 
         // 验证用户名是否已存在（排除当前用户）
         if (username) {
-            const existingUser = await userModel.findOne({ 
-                username, 
-                _id: { $ne: decoded.userId } 
+            const existingUser = await userModel.findOne({
+                username,
+                _id: { $ne: decoded.userId }
             });
             if (existingUser) {
                 return res.status(400).json({
@@ -275,9 +297,9 @@ router.put('/user/profile', async (req, res) => {
 
         // 验证手机号是否已存在（排除当前用户）
         if (phone) {
-            const existingUser = await userModel.findOne({ 
-                phone, 
-                _id: { $ne: decoded.userId } 
+            const existingUser = await userModel.findOne({
+                phone,
+                _id: { $ne: decoded.userId }
             });
             if (existingUser) {
                 return res.status(400).json({
@@ -289,9 +311,9 @@ router.put('/user/profile', async (req, res) => {
 
         // 验证邮箱是否已存在（排除当前用户）
         if (email) {
-            const existingUser = await userModel.findOne({ 
-                email, 
-                _id: { $ne: decoded.userId } 
+            const existingUser = await userModel.findOne({
+                email,
+                _id: { $ne: decoded.userId }
             });
             if (existingUser) {
                 return res.status(400).json({
@@ -347,6 +369,358 @@ router.put('/user/profile', async (req, res) => {
                 message: '服务器错误'
             });
         }
+    }
+});
+
+// 获取购物车
+router.get('/cart', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
+        }
+
+        let decoded;
+        try {
+            decoded = JWT.verify(token, 'access_secret');
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: '访问令牌已过期，请重新登录',
+                    code: 'TOKEN_EXPIRED'
+                });
+            }
+            return res.status(401).json({
+                success: false,
+                message: '无效的访问令牌'
+            });
+        }
+
+        const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        // 根据用户的merchantCode查找购物车
+        let cart = await CartModel.findOne({
+            merchantCode: user.merchantCode,
+            userId: user._id.toString()
+        });
+
+        if (!cart) {
+            // 如果购物车不存在，创建一个空的购物车
+            cart = new CartModel({
+                merchantCode: user.merchantCode,
+                userId: user._id.toString(),
+                items: []
+            });
+            await cart.save();
+        }
+
+        res.json({
+            success: true,
+            message: '获取购物车成功',
+            data: cart.items
+        });
+    } catch (error) {
+        console.error('获取购物车错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取购物车失败'
+        });
+    }
+});
+
+// 添加商品到购物车
+router.post('/cart/add', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
+        }
+
+        const decoded = JWT.verify(token, 'access_secret');
+        const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        const { productId, name, price, image, color, size, quantity = 1 } = req.body;
+
+        // 查找或创建购物车
+        let cart = await CartModel.findOne({
+            merchantCode: user.merchantCode,
+            userId: user._id.toString()
+        });
+
+        if (!cart) {
+            cart = new CartModel({
+                merchantCode: user.merchantCode,
+                userId: user._id.toString(),
+                items: []
+            });
+        }
+
+        // 检查商品是否已存在
+        const existingItemIndex = cart.items.findIndex(item =>
+            item.productId === productId &&
+            item.color === color &&
+            item.size === size
+        );
+
+        if (existingItemIndex !== -1) {
+            // 如果商品已存在，更新数量
+            cart.items[existingItemIndex].quantity += quantity;
+        } else {
+            // 如果商品不存在，添加新商品
+            cart.items.push({
+                productId,
+                name,
+                price,
+                image,
+                color,
+                size,
+                quantity
+            });
+        }
+
+        cart.updatedAt = new Date();
+        await cart.save();
+
+        res.json({
+            success: true,
+            message: '添加商品成功',
+            data: cart.items
+        });
+    } catch (error) {
+        console.error('添加商品到购物车错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '添加商品失败'
+        });
+    }
+});
+
+// 更新购物车商品数量
+router.put('/cart/update', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
+        }
+
+        const decoded = JWT.verify(token, 'access_secret');
+        const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        const { productId, color, size, quantity } = req.body;
+
+        const cart = await CartModel.findOne({
+            merchantCode: user.merchantCode,
+            userId: user._id.toString()
+        });
+
+        if (!cart) {
+            return res.status(404).json({
+                success: false,
+                message: '购物车不存在'
+            });
+        }
+
+        // 查找并更新商品数量
+        const itemIndex = cart.items.findIndex(item =>
+            item.productId === productId &&
+            item.color === color &&
+            item.size === size
+        );
+
+        if (itemIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: '商品不存在'
+            });
+        }
+
+        if (quantity <= 0) {
+            // 如果数量为0或负数，删除商品
+            cart.items.splice(itemIndex, 1);
+        } else {
+            // 更新数量
+            cart.items[itemIndex].quantity = quantity;
+        }
+
+        cart.updatedAt = new Date();
+        await cart.save();
+
+        res.json({
+            success: true,
+            message: '更新购物车成功',
+            data: cart.items
+        });
+    } catch (error) {
+        console.error('更新购物车错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '更新购物车失败'
+        });
+    }
+});
+
+// 删除购物车商品
+router.delete('/cart/remove', async (req, res) => {
+    try {
+        console.log('删除购物车商品请求开始');
+        console.log('请求体:', req.body);
+
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            console.log('未提供访问令牌');
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
+        }
+
+        const decoded = JWT.verify(token, 'access_secret');
+        console.log('Token解码成功，用户ID:', decoded.userId);
+
+        const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            console.log('用户不存在');
+            return res.status(401).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        console.log('用户信息:', {
+            id: user._id,
+            username: user.username,
+            merchantCode: user.merchantCode
+        });
+
+        const { productId, color, size } = req.body;
+        console.log('要删除的商品信息:', { productId, color, size });
+
+        const cart = await CartModel.findOne({
+            merchantCode: user.merchantCode,
+            userId: user._id.toString()
+        });
+
+        console.log('找到的购物车:', cart ? '存在' : '不存在');
+
+        if (!cart) {
+            console.log('购物车不存在');
+            return res.status(404).json({
+                success: false,
+                message: '购物车不存在'
+            });
+        }
+
+        console.log('购物车中的商品数量:', cart.items.length);
+        console.log('购物车商品列表:', cart.items.map(item => ({
+            productId: item.productId,
+            color: item.color,
+            size: item.size
+        })));
+
+        // 删除指定商品
+        const originalLength = cart.items.length;
+        cart.items = cart.items.filter(item =>
+            !(item.productId === productId &&
+                item.color === color &&
+                item.size === size)
+        );
+
+        console.log('过滤后的商品数量:', cart.items.length);
+        console.log('删除的商品数量:', originalLength - cart.items.length);
+
+        cart.updatedAt = new Date();
+        await cart.save();
+        console.log('购物车保存成功');
+
+        res.json({
+            success: true,
+            message: '删除商品成功',
+            data: cart.items
+        });
+    } catch (error) {
+        console.error('删除购物车商品错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '删除商品失败'
+        });
+    }
+});
+
+// 清空购物车
+router.delete('/cart/clear', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: '未提供访问令牌'
+            });
+        }
+
+        const decoded = JWT.verify(token, 'access_secret');
+        const user = await userModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户不存在'
+            });
+        }
+
+        const cart = await CartModel.findOne({
+            merchantCode: user.merchantCode,
+            userId: user._id.toString()
+        });
+
+        if (cart) {
+            cart.items = [];
+            cart.updatedAt = new Date();
+            await cart.save();
+        }
+
+        res.json({
+            success: true,
+            message: '清空购物车成功',
+            data: []
+        });
+    } catch (error) {
+        console.error('清空购物车错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '清空购物车失败'
+        });
     }
 });
 

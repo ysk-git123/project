@@ -6,11 +6,17 @@
         <p>加载中...</p>
       </div>
       <div v-else-if="error">
-        <p class="error-message">{{ error }}</p>
+        <p class="error-message">
+          {{ error }}
+        </p>
       </div>
       <div v-else-if="contextData && contextData.length > 0">
         <div class="context-items">
-          <div v-for="item in contextData" :key="item._id" class="context-item">
+          <div
+            v-for="item in contextData"
+            :key="item._id"
+            class="context-item"
+          >
             <h3>{{ item.sjMerchantCode }}</h3>
             <p>{{ item.sell }}</p>
           </div>

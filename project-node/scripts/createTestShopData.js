@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { shopModel } = require('../database/Login');
+const { shopModel } = require('../database/shop');
 
 // 连接数据库
 mongoose.connect('mongodb+srv://335846526:ysk123456@cluster0.ko0b4ty.mongodb.net/Database')
@@ -17,7 +17,7 @@ async function createTestShopData() {
     const testProducts = [
       {
         name: '时尚T恤',
-        img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
         price: 99.00,
         color: ['白色', '黑色', '蓝色'],
         size: ['S', 'M', 'L', 'XL'],
@@ -26,7 +26,7 @@ async function createTestShopData() {
       },
       {
         name: '运动鞋',
-        img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
         price: 299.00,
         color: ['白色', '黑色'],
         size: ['36', '37', '38', '39', '40', '41', '42'],
@@ -35,7 +35,7 @@ async function createTestShopData() {
       },
       {
         name: '时尚背包',
-        img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
+        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
         price: 199.00,
         color: ['黑色', '棕色'],
         size: ['标准'],
@@ -44,7 +44,7 @@ async function createTestShopData() {
       },
       {
         name: '牛仔裤',
-        img: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
+        image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
         price: 159.00,
         color: ['蓝色', '黑色'],
         size: ['28', '29', '30', '31', '32', '33', '34'],
@@ -53,7 +53,7 @@ async function createTestShopData() {
       },
       {
         name: '手表',
-        img: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400',
+        image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400',
         price: 599.00,
         color: ['银色', '金色'],
         size: ['标准'],
@@ -62,7 +62,7 @@ async function createTestShopData() {
       },
       {
         name: '休闲鞋',
-        img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400',
+        image: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400',
         price: 199.00,
         color: ['白色', '灰色'],
         size: ['36', '37', '38', '39', '40', '41', '42'],

@@ -1,8 +1,13 @@
 <template>
   <el-header class="header">
     <div class="header-content">
-      <el-header class="header-title">{{ props.currentTitle }}</el-header>
-      <button class="theme-toggle" @click="toggleTheme">
+      <el-header class="header-title">
+        {{ props.currentTitle }}
+      </el-header>
+      <button
+        class="theme-toggle"
+        @click="toggleTheme"
+      >
         {{ props.currentTheme === 'light' ? '切换深色模式' : '切换浅色模式' }}
       </button>
     </div>

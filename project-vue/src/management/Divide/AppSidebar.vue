@@ -1,6 +1,11 @@
 <template>
   <el-aside class="aside">
-    <div class="aside-title" @click="handleAddFile">{{ props.title }}</div>
+    <div
+      class="aside-title"
+      @click="handleAddFile"
+    >
+      {{ props.title }}
+    </div>
     <div
       v-for="item in props.navItems"
       :key="item.path"

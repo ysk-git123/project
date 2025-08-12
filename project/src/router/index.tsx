@@ -14,8 +14,7 @@ import Shoppdetail from '../components/yjl/shoppdetail'
 import Shopping from '../components/yjl/shopping'
 import Cart from '../components/yjl/cart'
 import CustomerService from '../components/yjl/CustomerService'
-// import CustomerServiceTest from '../components/yjl/CustomerServiceTest'
-// import TestCustomerService from '../components/yjl/TestCustomerService'
+
 import MyOrder from '../components/yjl/myorder'
 import OrderDetail from '../components/yjl/order-detail'
 
@@ -54,14 +53,7 @@ const router = createBrowserRouter([
         path: '/ai-customer-service',                    // 智能客服
         element: <CustomerService />
     },
-    // {
-    //     path: '/customer-service-test',                  // 智能客服测试
-    //     element: <CustomerServiceTest />
-    // },
-    // {
-    //     path: '/test-customer-service',                  // 智能客服系统测试
-    //     element: <TestCustomerService />
-    // },
+
     {
         path: '/classify',                               // 分类
         element: <Classify />

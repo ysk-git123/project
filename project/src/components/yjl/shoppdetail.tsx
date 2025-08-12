@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import './shoppdetail.moudle.css';
+import './modules.css/shoppdetail.moudle.css';
 import { useCart } from '../../utils/CartContext';
 import type { CartItem } from '../../utils/CartContext';
 
@@ -23,7 +23,6 @@ const Shoppdetail: React.FC = () => {
     
     // 从location.state中获取完整的商品数据
     const productData = location.state?.product;
-    console.log('接收到的商品数据:', productData);
     
     const services = [
         "满100元包邮",
@@ -42,17 +41,7 @@ const Shoppdetail: React.FC = () => {
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
     const [isBuyNow, setIsBuyNow] = useState(false); // 区分是加入购物车还是立即购买
     
-    // 如果没有传递商品数据，则从URL参数获取ID并请求数据（兼容性处理）
-    useEffect(() => {
-        if (!productData) {
-            const id = new URLSearchParams(location.search).get('id');
-            if (id) {
-                console.log('从URL参数获取商品ID:', id);
-                // 这里可以保留原来的API请求逻辑作为备用
-                // 但主要使用传递的数据
-            }
-        }
-    }, [productData, location.search]);
+
     
     const toggleCollect = () => {
         setIsCollected(!isCollected);
@@ -118,7 +107,7 @@ const Shoppdetail: React.FC = () => {
             } else {
                 // 加入购物车
                 const cartItem: CartItem = {
-                    id: ShopData._id,
+                    productId: ShopData._id,
                     name: ShopData.name,
                     price: ShopData.price,
                     image: ShopData.image,
@@ -153,6 +142,13 @@ const Shoppdetail: React.FC = () => {
     const selectSize = (size: string) => {
         setSelectedSize(size);
     };
+
+    // 接收路由传递的商品数据
+    useEffect(() => {
+        if (location.state) {
+            // 处理路由传递的数据
+        }
+    }, [location.state]);
 
     // 如果没有商品数据，显示加载状态
     if (!ShopData) {

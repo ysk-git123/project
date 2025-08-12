@@ -12,6 +12,10 @@ class TokenManager {
 
   // 设置 Token
   static setTokens(accessToken: string, refreshToken: string): void {
+    if (!accessToken || !refreshToken) {
+      console.warn('Token 为空:', { accessToken, refreshToken });
+    }
+    
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
   }
@@ -27,7 +31,9 @@ class TokenManager {
   static isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
+      // 提前5分钟认为Token过期，给刷新留出时间
+      const advanceRefreshTime = 5 * 60 * 1000; // 5分钟
+      return payload.exp * 1000 < (Date.now() + advanceRefreshTime);
     } catch {
       return true;
     }
@@ -50,12 +56,12 @@ class TokenManager {
       });
 
       const data = await response.json();
-      
+
       if (data.success && data.data?.accessToken) {
         localStorage.setItem('accessToken', data.data.accessToken);
         return data.data.accessToken;
       }
-      
+
       return null;
     } catch (error) {
       console.error('刷新 Token 失败:', error);
@@ -63,5 +69,32 @@ class TokenManager {
     }
   }
 }
+
+// 自动刷新Token的定时器
+let refreshTimer: number | null = null;
+
+// 启动自动刷新Token
+export const startAutoRefresh = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  // 每10分钟检查一次Token状态
+  const autoRefreshInterval = 10 * 60 * 1000; // 10分钟
+  refreshTimer = setInterval(async () => {
+    const accessToken = TokenManager.getAccessToken();
+    if (accessToken && TokenManager.isTokenExpired(accessToken)) {
+      await TokenManager.refreshAccessToken();
+    }
+  }, autoRefreshInterval);
+};
+
+// 停止自动刷新
+export const stopAutoRefresh = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+};
 
 export default TokenManager; 

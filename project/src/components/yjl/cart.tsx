@@ -1,10 +1,11 @@
 import React from 'react';
 import { useCart, getCartItemKey } from '../../utils/CartContext';
 import { useNavigate } from 'react-router-dom';
-import './cart.moudel.css';
+import { Toast } from 'antd-mobile';
+import './modules.css/cart.moudel.css';
 
 const Cart: React.FC = () => {
-    const { state, removeItem, getTotalPrice } = useCart();
+    const { state, removeItem, getTotalPrice, loadCart } = useCart();
     const navigate = useNavigate();
 
     const handleRemoveItem = (itemKey: string) => {
@@ -13,13 +14,16 @@ const Cart: React.FC = () => {
 
     const handleCheckout = () => {
         if (state.items.length === 0) {
-            alert('购物车为空，无法结算');
+            Toast.show({
+                content: '购物车为空，无法结算',
+                duration: 2000
+            });
             return;
         }
         
         // 将购物车商品转换为订单格式
         const orderItems = state.items.map(item => ({
-            id: item.id,
+            id: item.productId, // 使用productId作为id
             name: item.name,
             price: item.price,
             image: item.image,
@@ -37,6 +41,10 @@ const Cart: React.FC = () => {
         });
     };
 
+    const handleRefresh = () => {
+        loadCart();
+    };
+
     return (
         <div className="cart-container">
             {/* 头部导航 */}
@@ -45,11 +53,26 @@ const Cart: React.FC = () => {
                     返回
                 </div>
                 <div className="nav-title">购物车</div>
-                <div className="nav-placeholder"></div>
+                <div className="nav-refresh-btn" onClick={handleRefresh}>
+                    刷新
+                </div>
             </div>
 
+            {/* 错误提示 */}
+            {state.error && (
+                <div className="error-message">
+                    <p>{state.error}</p>
+                    <button onClick={handleRefresh}>重试</button>
+                </div>
+            )}
+
             {/* 购物车内容 */}
-            {state.items.length === 0 ? (
+            {state.loading ? (
+                <div className="loading-cart">
+                    <div className="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            ) : state.items.length === 0 ? (
                 <div className="empty-cart">
                     <div className="empty-cart-icon">🛒</div>
                     <p>购物车是空的</p>
@@ -79,7 +102,9 @@ const Cart: React.FC = () => {
                                         </div>
                                         <button
                                             className="remove-btn"
-                                            onClick={() => handleRemoveItem(itemKey)}
+                                            onClick={() => {
+                                                handleRemoveItem(itemKey);
+                                            }}
                                         >
                                             删除
                                         </button>
@@ -110,7 +135,6 @@ const Cart: React.FC = () => {
                 </>
             )}
         </div>
-
     );
 };
 

@@ -4,8 +4,16 @@
       <div>商城管理后台</div>
       <div class="nav">
         <ul class="nav-list">
-          <li v-for="item in navItems" :key="item.path" class="nav-item">
-            <router-link :to="item.path" class="nav-link" @click="updateContent(item.text)">
+          <li
+            v-for="item in navItems"
+            :key="item.path"
+            class="nav-item"
+          >
+            <router-link
+              :to="item.path"
+              class="nav-link"
+              @click="updateContent(item.text)"
+            >
               {{ item.text }}
             </router-link>
           </li>
@@ -21,12 +29,14 @@
           <el-icon><Bell /></el-icon>
         </div>
         <div>
-          <el-icon @click="HandSwitch"><SwitchButton /></el-icon>
+          <el-icon @click="HandSwitch">
+            <SwitchButton />
+          </el-icon>
         </div>
       </div>
     </div>
     <div>
-      <router-view></router-view>
+      <router-view />
     </div>
   </div>
 </template>

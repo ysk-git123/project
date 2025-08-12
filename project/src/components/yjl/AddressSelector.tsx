@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './AddressSelector.moudel.css';
+import './modules.css/AddressSelector.moudel.css';
 import { loadAMapScript, getCurrentPosition, reverseGeocode } from '../../utils/mapUtils';
 
 // // 直接在这里定义Position类型，避免导入问题
@@ -125,34 +125,25 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
 
   // 获取当前位置并解析地址
   const getCurrentLocationAndAddress = async () => {
-    console.log('获取当前位置按钮被点击');
-    
     setLoading(true);
     setApiResponse(null);
 
     try {
-      console.log('开始获取位置...');
-      
       // 使用工具函数获取位置
       const position = await getCurrentPosition();
-      console.log('位置获取成功:', position);
       
       // 使用工具函数进行逆地理编码
       const address = await reverseGeocode(position);
-      console.log('地址解析成功:', address);
       
       // 解析地址信息（改进地址处理逻辑）
       let addressInfo;
       
       if (address.includes('附近') || address.includes('境内位置')) {
         // 离线地址解析结果 - 更精确地提取城市和区域信息
-        console.log('处理离线地址:', address);
         
         // 提取完整的地区信息（例如：北京市海淀区 附近）
         const locationMatch = address.match(/^([^附近境内坐标]+)/);
         const locationStr = locationMatch ? locationMatch[1].trim() : '';
-        
-        console.log('提取的位置信息:', locationStr);
         
         if (locationStr) {
           // 解析省市区信息
@@ -195,8 +186,6 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
             district: district || '请选择区县',
             detail: `大概位置：${address}`
           };
-          
-          console.log('解析结果:', addressInfo);
         } else {
           addressInfo = {
             province: '请选择省份',
@@ -328,31 +317,10 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
     return addressParts;
   };
 
-  // 模拟获取地址列表
+  // 获取地址列表
   useEffect(() => {
-    const mockAddresses: Address[] = [
-      {
-        id: '1',
-        recipient: '张三',
-        phone: '138****1234',
-        province: '北京市',
-        city: '北京市',
-        district: '朝阳区',
-        detail: '三里屯街道工体北路8号',
-        isDefault: true
-      },
-      {
-        id: '2',
-        recipient: '李四',
-        phone: '139****5678',
-        province: '上海市',
-        city: '上海市',
-        district: '浦东新区',
-        detail: '陆家嘴金融贸易区世纪大道88号',
-        isDefault: false
-      }
-    ];
-    setAddresses(mockAddresses);
+    // TODO: 从API获取真实地址数据
+    setAddresses([]);
   }, []);
 
   // 处理表单输入

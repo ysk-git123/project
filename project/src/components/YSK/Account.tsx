@@ -22,6 +22,7 @@ interface UserInfo {
     email: string;
     status: number;
     create_time: string;
+    merchantCode?: string;
 }
 
 interface FormData {

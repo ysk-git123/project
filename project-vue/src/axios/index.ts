@@ -18,6 +18,14 @@ const service: AxiosInstance = axios.create({
 // 用于存储刷新token的Promise
 let refreshTokenPromise: Promise<boolean> | null = null;
 
+// 定义刷新令牌响应类型
+interface RefreshTokenResponse {
+  code: number;
+  accessToken: string;
+  refreshToken: string;
+  msg?: string;
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -86,11 +94,12 @@ service.interceptors.response.use(
             const response = await refreshToken({
               refreshToken: store.state.refreshToken,
             });
-            // 修复类型错误：访问response.data.code而不是response.code
-            if (response.data.code === 200) {
+            // 修复类型错误：添加类型断言
+            const responseData = response.data as RefreshTokenResponse;
+            if (responseData.code === 200) {
               store.commit('updateTokens', {
-                accessToken: response.data.accessToken,
-                refreshToken: response.data.refreshToken, // 如果后端返回新的refreshToken
+                accessToken: responseData.accessToken,
+                refreshToken: responseData.refreshToken, // 如果后端返回新的refreshToken
               });
               resolve(true);
             } else {
