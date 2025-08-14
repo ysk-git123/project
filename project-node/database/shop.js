@@ -21,6 +21,20 @@ const shopSchema = mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    // 审核相关字段
+    status: {                        // 审核状态：pending(待审核), approved(已通过), rejected(已拒绝)
+        type: String,
+        default: 'pending',
+        enum: ['pending', 'approved', 'rejected']
+    },
+    rejectReason: String,            // 拒绝原因
+    auditTime: Date,                 // 审核时间
+    auditor: String,                 // 审核人
+    merchantCode: String,            // 商家代码
+    stock: {                         // 库存数量
+        type: Number,
+        default: 0
+    }
     
 })
 

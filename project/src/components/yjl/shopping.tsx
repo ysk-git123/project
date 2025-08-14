@@ -122,13 +122,21 @@ const Shopping: React.FC = () => {
                 paymentMethod: paymentMethod,
                 message: buyerMessage
             };
+            
+            // 添加调试日志
+            console.log('订单创建数据:', {
+                currentUser,
+                merchantCode: orderData.merchantCode,
+                itemsCount: orderItems.length,
+                items: orderItems
+            });
 
             let orderNo = null;
             let orderId = null;
 
             // 首先创建详细订单记录
             try {
-                const createOrderResponse = await fetch('http://localhost:3000/YJL/create-order', {
+                const createOrderResponse = await fetch('/YJL/create-order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -139,16 +147,13 @@ const Shopping: React.FC = () => {
                 if (createOrderResponse.ok) {
                     const orderResult = await createOrderResponse.json();
                     if (orderResult.code === 200) {
-                        // 订单创建成功
-                        alert('订单创建成功！');
+                        // 订单创建成功，获取订单信息
+                        orderNo = orderResult.data.orderNo;
+                        orderId = orderResult.data.orderId;
+                        console.log('订单创建成功:', { orderNo, orderId });
                         
-                        // 清空购物车
-                        if (fromCart) {
-                            clearCart();
-                        }
-                        
-                        // 跳转到订单页面
-                        navigate('/myorder');
+                        // 不清空购物车，等支付成功后再清空
+                        // 不跳转，继续支付流程
                     } else {
                         alert(`订单创建失败: ${orderResult.message}`);
                     }
@@ -164,8 +169,8 @@ const Shopping: React.FC = () => {
             
             // 使用已创建的订单号进行支付
             const payUrl = orderNo 
-                ? `http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}&orderNo=${orderNo}`
-                : `http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}`;
+                        ? `/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}&orderNo=${orderNo}`
+        : `/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}`;
             
             const response = await fetch(payUrl);
             const result = await response.json();
@@ -179,7 +184,7 @@ const Shopping: React.FC = () => {
                     if (payWindow?.closed) {
                         // 支付窗口关闭，检查支付状态
                         try {
-                            const statusResponse = await fetch(`http://localhost:3000/YJL/order/status/${result.data.orderNo}`);
+                            const statusResponse = await fetch(`/YJL/order/status/${result.data.orderNo}`);
                             if (statusResponse.ok) {
                                 const statusResult = await statusResponse.json();
                                 if (statusResult.code === 200) {
@@ -201,13 +206,9 @@ const Shopping: React.FC = () => {
                             console.error('检查支付状态失败:', error);
                         }
                         
-                        // 默认处理：支付窗口关闭，可能支付完成
-                        alert('支付窗口已关闭！如果已完成支付，订单将在几分钟内处理。');
-                        
                         // 如果来自购物车，清空购物车
                         if (fromCart) {
                             clearCart();
-                            alert('支付流程完成！购物车已清空');
                         }
                         
                         // 跳转到订单页面查看状态

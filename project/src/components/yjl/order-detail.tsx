@@ -39,7 +39,7 @@ const OrderDetail: React.FC = () => {
             // 尝试从API获取订单详情
             if (currentUser && orderId) {
                 try {
-                    const response = await fetch(`http://localhost:3000/YJL/order/${orderId}?username=${encodeURIComponent(currentUser.username)}`);
+                    const response = await fetch(`/YJL/order/${orderId}?username=${encodeURIComponent(currentUser.username)}`);
 
                     if (response.ok) {
                         const result = await response.json();
@@ -125,7 +125,7 @@ const OrderDetail: React.FC = () => {
                 case 'cancel':
                     if (confirm('确定要取消这个订单吗？')) {
                         try {
-                            const response = await fetch(`http://localhost:3000/YJL/order/cancel/${order.id}`, {
+                            const response = await fetch(`/YJL/order/cancel/${order.id}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ const OrderDetail: React.FC = () => {
                 case 'confirm':
                     if (confirm('确认收货吗？')) {
                         try {
-                            const response = await fetch(`http://localhost:3000/YJL/order/confirm/${order.id}`, {
+                            const response = await fetch(`/YJL/order/confirm/${order.id}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',

@@ -31,7 +31,7 @@ const router = express.Router();
 
 // 中间件 - 修复CORS配置
 router.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
+          origin: ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:8080'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

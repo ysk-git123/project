@@ -19,17 +19,44 @@ async function refreshTokenController(req, res) {
         return res.status(403).json({ code: 403, msg: "刷新令牌无效或已过期" });
       }
       try {
+        console.log('🔍 refreshToken调试信息:', {
+          decodedUserId: decoded.userId,
+          decodedMerchantCode: decoded.merchantCode,
+          decodedType: typeof decoded.userId
+        });
+        
         // 查找用户信息
         const authority = await AuthorityApp.findOne({
           userAM: decoded.userId,
           merchantCode: decoded.merchantCode,
         });
+        
+        console.log('🔍 数据库查询结果:', {
+          foundAuthority: !!authority,
+          authorityData: authority ? {
+            username: authority.username,
+            merchantCode: authority.merchantCode,
+            userAM: authority.userAM
+          } : null
+        });
+        
         if (!authority) {
+          console.log('❌ 未找到用户权限记录');
           return res.status(404).json({ code: 404, msg: "用户不存在" });
         }
+        
         // 生成新的令牌
         const user = { _id: decoded.userId, username: authority.username };
         const newTokens = generateTokens(user, decoded.merchantCode);
+        
+        console.log('🔍 生成的token:', {
+          hasAccessToken: !!newTokens.accessToken,
+          hasRefreshToken: !!newTokens.refreshToken,
+          tokenLength: {
+            accessToken: newTokens.accessToken?.length,
+            refreshToken: newTokens.refreshToken?.length
+          }
+        });
 
         res.status(200).json({
           code: 200,

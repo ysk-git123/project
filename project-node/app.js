@@ -8,6 +8,7 @@ var cors = require('cors');
 var LZYRouter = require('./routes/LZY/index')
 var YSKRouter = require('./routes/YSK/index')
 var YJLRouter = require('./routes/YJL/index')
+var uploadRouter = require('./routes/YSK/upload')
 
 // 引入数据库连接
 require('./database/database');
@@ -24,11 +25,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'routes/public/uploads')));
+app.use('/uploads/products', express.static(path.join(__dirname, 'routes/public/uploads/products')));
 
 
 app.use('/LZY', LZYRouter);
 app.use('/YSK', YSKRouter);
 app.use('/YJL', YJLRouter);
+app.use('/upload', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

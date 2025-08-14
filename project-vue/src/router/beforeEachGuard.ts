@@ -14,7 +14,7 @@ export function beforeEachGuard(
   next: NavigationGuardNext,
 ): void {
   // 定义不需要登录的白名单路由
-  const whiteList = ['/', '/register', '/forget'];
+  const whiteList = ['/', '/login', '/register', '/forget'];
 
   // 检查是否在白名单中
   if (whiteList.includes(to.path)) {
@@ -24,7 +24,7 @@ export function beforeEachGuard(
   }
 
   // 检查是否已登录
-  const isLoggedIn = store.state.isLoggedIn || localStorage.getItem('token');
+  const isLoggedIn = store.state.isLoggedIn || localStorage.getItem('accessToken');
   const userInfo = store.state.userInfo;
 
   console.log('登录状态:', isLoggedIn);
@@ -71,21 +71,21 @@ export function beforeEachGuard(
           } else {
             // 如果没有允许的路径，重定向到登录页
             console.log('没有允许的路径，重定向到登录页');
-            next('/');
+            next('/login');
           }
         }
       } else {
         // 如果角色不存在于权限配置中，重定向到登录页
         console.log('角色不存在于权限配置中，重定向到登录页');
-        next('/');
+        next('/login');
       }
     } else {
       // 如果没有用户信息，重定向到登录页
       console.log('没有用户信息，重定向到登录页');
-      next('/');
+      next('/login');
     }
   } else {
     console.log('未登录，重定向到登录页');
-    next('/');
+    next('/login');
   }
 }

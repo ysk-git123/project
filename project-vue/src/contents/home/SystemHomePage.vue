@@ -32,14 +32,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue';
   import { useStore } from 'vuex';
-  import { getMerchantContext } from '../../axios/api';
-
-  // 在脚本开头添加接口定义
-  interface MerchantContextItem {
-    _id: string;
-    sjMerchantCode: string;
-    sell: string;
-  }
+  import { getMerchantContext, type MerchantContextItem } from '../../axios/api';
 
   const store = useStore();
   const contextData = ref<MerchantContextItem[]>([]);
@@ -49,36 +42,28 @@
   // 页面加载时获取商家数据
   onMounted(async () => {
     try {
-      console.log('开始获取商家数据');
+  
       // 确保用户已登录且有merchantCode
       if (!store.state.isLoggedIn || !store.state.userInfo?.merchantCode) {
         throw new Error('用户未登录或缺少商家标识');
       }
 
-      console.log('当前商家代码:', store.state.userInfo.merchantCode);
+      
       const response = await getMerchantContext();
-      console.log('请求响应:', response);
-      // @ts-expect-error 响应数据结构与TypeScript类型不匹配，临时忽略类型检查
-      if (response.code === 200) {
-        // 注意：这里可能是问题所在，检查response的结构
+      
+      
+      if (response.success) {
+        // 现在类型是安全的，response.data 是 MerchantContextItem[]
         contextData.value = response.data || [];
-        console.log('设置的数据:', contextData.value);
+
       } else {
-        // @ts-expect-error 响应数据结构与TypeScript类型不匹配，临时忽略类型检查
-        error.value = `请求失败: ${response.msg || '未知错误'}`;
+        error.value = response.message || '获取数据失败';
       }
     } catch (err) {
       console.error('获取商家数据失败:', err);
       error.value = `获取数据失败: ${err instanceof Error ? err.message : String(err)}`;
-      // 输出请求头信息以便调试
-      const headers = {
-        Authorization: store.state.accessToken ? `Bearer ${store.state.accessToken}` : '无',
-        'Merchant-Code':
-          store.state.userInfo && store.state.userInfo.merchantCode
-            ? store.state.userInfo.merchantCode
-            : '无',
-      };
-      console.log('请求头信息:', headers);
+
+      
     } finally {
       loading.value = false;
     }

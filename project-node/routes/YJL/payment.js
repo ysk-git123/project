@@ -29,7 +29,9 @@ const alipaySdk = new AlipaySdk({
 
 // 生成订单号
 function generateOrderNo(userId) {
-    return `ORDER_${Date.now()}_${userId}`;
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 15);
+    return `ORDER_${timestamp}_${randomId}`;
 }
 
 // 订单模型定义
@@ -83,9 +85,22 @@ const orderDetailModel = mongoose.model('OrderDetail', orderDetailSchema);
 // 创建完整订单记录
 router.post('/create-order', async (req, res) => {
     try {
-        const { userId, username, merchantCode, items, totalAmount, address, paymentMethod, message } = req.body;
+        const { userId, username, merchantCode: frontendMerchantCode, items, totalAmount, address, paymentMethod, message } = req.body;
         
-        if (!username || !merchantCode || !items || !totalAmount) {
+        // 确保merchantCode有值，如果没有则使用默认值
+        const merchantCode = frontendMerchantCode || 'MER001';
+        
+        console.log('创建订单请求数据:', {
+            userId,
+            username,
+            frontendMerchantCode,
+            finalMerchantCode: merchantCode,
+            itemsCount: items ? items.length : 0,
+            items,
+            totalAmount
+        });
+        
+        if (!username || !items || !totalAmount) {
             return res.status(400).json({
                 code: 400,
                 message: '订单信息不完整'
@@ -194,9 +209,9 @@ router.get('/zf', async (req, res) => {
                 total_amount: amount,
                 subject: "交付界面",
                 product_code: "QUICK_WAP_WAY",
-                quit_url: "http://localhost:3000/YJL/payment/cancel",
-                notify_url: "http://localhost:3000/YJL/payment/notify",
-                return_url: "http://localhost:3000/YJL/payment/success"
+                quit_url: "http://localhost:5000/YJL/payment/cancel",
+                notify_url: "http://localhost:5000/YJL/payment/notify",
+                return_url: "http://localhost:5000/YJL/payment/success"
             },
         };
 
@@ -239,7 +254,7 @@ router.get('/payment/success', async (req, res) => {
             // 更新简单订单状态
             const order = await orderModel.findOne({ orderNo: out_trade_no });
             if (order) {
-                order.status = 'success';
+                order.status = 'paid';  // 统一为 'paid' 状态
                 order.alipayTradeNo = trade_no;
                 order.updatedAt = new Date();
                 await order.save();
@@ -248,11 +263,14 @@ router.get('/payment/success', async (req, res) => {
             // 更新详细订单状态
             const orderDetail = await orderDetailModel.findOne({ orderNo: out_trade_no });
             if (orderDetail) {
-                orderDetail.status = 'shipped'; // 支付成功后直接变为已发货状态
-                orderDetail.alipayTradeNo = trade_no;
-                orderDetail.updatedAt = new Date();
-                await orderDetail.save();
-                console.log('详细订单状态已更新为已发货:', out_trade_no);
+                // 如果订单状态不是已发货或已收货，则更新为已支付
+                if (orderDetail.status !== 'shipped' && orderDetail.status !== 'received') {
+                    orderDetail.status = 'paid'; // 支付成功后变为已支付状态（待发货）
+                    orderDetail.alipayTradeNo = trade_no;
+                    orderDetail.updatedAt = new Date();
+                    await orderDetail.save();
+                    console.log('详细订单状态已更新为已支付:', out_trade_no);
+                }
             }
 
             // 更新用户VIP状态
@@ -338,8 +356,8 @@ router.post('/payment/notify', async (req, res) => {
         if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'TRADE_FINISHED') {
             // 更新简单订单状态
             const order = await orderModel.findOne({ orderNo });
-            if (order && order.status !== 'success') {
-                order.status = 'success';
+            if (order && order.status !== 'paid') {
+                order.status = 'paid';  // 统一为 'paid' 状态
                 order.alipayTradeNo = tradeNo;
                 order.updatedAt = new Date();
                 await order.save();
@@ -347,12 +365,15 @@ router.post('/payment/notify', async (req, res) => {
 
             // 更新详细订单状态
             const orderDetail = await orderDetailModel.findOne({ orderNo });
-            if (orderDetail && orderDetail.status === 'pending') {
-                orderDetail.status = 'shipped'; // 支付成功后直接变为已发货状态
-                orderDetail.alipayTradeNo = tradeNo;
-                orderDetail.updatedAt = new Date();
-                await orderDetail.save();
-                console.log('详细订单状态已更新为已发货:', orderNo);
+            if (orderDetail) {
+                // 如果订单状态不是已发货或已收货，则更新为已支付
+                if (orderDetail.status !== 'shipped' && orderDetail.status !== 'received') {
+                    orderDetail.status = 'paid'; // 支付成功后变为已支付状态（待发货）
+                    orderDetail.alipayTradeNo = tradeNo;
+                    orderDetail.updatedAt = new Date();
+                    await orderDetail.save();
+                    console.log('详细订单状态已更新为已支付:', orderNo);
+                }
             }
 
             // 更新用户VIP状态
@@ -382,7 +403,26 @@ router.post('/payment/notify', async (req, res) => {
 router.get('/order/status/:orderNo', async (req, res) => {
     try {
         const { orderNo } = req.params;
-        const order = await orderModel.findOne({ orderNo });
+        
+        // 首先尝试从简单订单表查询
+        let order = await orderModel.findOne({ orderNo });
+        
+        // 如果简单订单不存在，尝试从详细订单表查询
+        if (!order) {
+            const orderDetail = await orderDetailModel.findOne({ orderNo });
+            if (orderDetail) {
+                // 将详细订单转换为简单订单格式
+                order = {
+                    orderNo: orderDetail.orderNo,
+                    username: orderDetail.username,
+                    amount: orderDetail.totalAmount.toString(),
+                    status: orderDetail.status,
+                    alipayTradeNo: orderDetail.alipayTradeNo,
+                    createdAt: orderDetail.createdAt,
+                    updatedAt: orderDetail.updatedAt
+                };
+            }
+        }
         
         if (!order) {
             return res.status(404).json({
@@ -408,6 +448,57 @@ router.get('/order/status/:orderNo', async (req, res) => {
         res.status(500).json({
             code: 500,
             message: '查询失败',
+            error: error.message
+        });
+    }
+});
+
+// 自动发货API - 将待发货订单自动变为已发货
+router.post('/order/auto-ship/:orderNo', async (req, res) => {
+    try {
+        const { orderNo } = req.params;
+        
+        console.log('自动发货请求:', orderNo);
+        
+        // 查找详细订单
+        const orderDetail = await orderDetailModel.findOne({ orderNo });
+        if (!orderDetail) {
+            return res.status(404).json({
+                code: 404,
+                message: '订单不存在'
+            });
+        }
+        
+        // 检查订单状态是否为待发货
+        if (orderDetail.status !== 'paid') {
+            return res.status(400).json({
+                code: 400,
+                message: '订单状态不是待发货，无法自动发货'
+            });
+        }
+        
+        // 更新订单状态为已发货
+        orderDetail.status = 'shipped';
+        orderDetail.updatedAt = new Date();
+        await orderDetail.save();
+        
+        console.log('订单自动发货成功:', orderNo);
+        
+        res.json({
+            code: 200,
+            message: '订单自动发货成功',
+            data: {
+                orderNo,
+                status: 'shipped',
+                updatedAt: orderDetail.updatedAt
+            }
+        });
+        
+    } catch (error) {
+        console.error('自动发货失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '自动发货失败',
             error: error.message
         });
     }
@@ -461,17 +552,17 @@ router.get('/orders/:username', async (req, res) => {
         
         const merchantCode = user.merchantCode || 'MER001';
         
-        // 首先尝试从详细订单表获取，根据merchantCode过滤
+        // 首先尝试从详细订单表获取，不强制要求merchantCode匹配
         let orders = await orderDetailModel.find({ 
-            username, 
-            merchantCode 
+            username
         }).sort({ createdAt: -1 });
         
+        console.log(`用户 ${username} 的详细订单数量:`, orders.length);
+        
         if (orders.length === 0) {
-            // 如果没有详细订单，从简单订单表获取，根据merchantCode过滤
+            // 如果没有详细订单，从简单订单表获取，不强制要求merchantCode匹配
             const simpleOrders = await orderModel.find({ 
-                username, 
-                merchantCode 
+                username
             }).sort({ createdAt: -1 });
             
             // 转换为前端需要的格式，从商品数据库获取真实商品信息
@@ -541,6 +632,19 @@ router.get('/orders/:username', async (req, res) => {
                     };
                 }
             }));
+        }
+        
+        // 添加详细订单数据日志
+        if (orders.length > 0) {
+            console.log('详细订单数据示例:', {
+                orderNo: orders[0].orderNo,
+                itemsCount: orders[0].items ? orders[0].items.length : 0,
+                items: orders[0].items,
+                status: orders[0].status,
+                merchantCode: orders[0].merchantCode
+            });
+        } else {
+            console.log(`用户 ${username} 没有找到详细订单，尝试从简单订单表获取`);
         }
         
         // 转换为前端需要的格式
@@ -1056,17 +1160,71 @@ router.put('/order/update-status/:orderNo', async (req, res) => {
 function mapOrderStatus(backendStatus) {
     console.log('后端状态映射:', backendStatus);
     const statusMap = {
-        'pending': 'pending_payment',
-        'processing': 'paid',  // 添加processing状态映射
-        'success': 'paid',
-        'shipped': 'shipped',
-        'received': 'received',
-        'cancelled': 'cancelled',
-        'failed': 'payment_failed'
+        'pending': 'pending_payment',    // 待付款
+        'success': 'paid',               // 支付成功 -> 已支付
+        'paid': 'paid',                  // 已支付
+        'processing': 'processing',      // 待发货
+        'shipped': 'shipped',            // 已发货
+        'received': 'received',          // 已收货
+        'cancelled': 'cancelled',        // 已取消
+        'failed': 'payment_failed'       // 支付失败
     };
     const mappedStatus = statusMap[backendStatus] || 'pending_payment';
     console.log('映射后状态:', mappedStatus);
     return mappedStatus;
 }
+
+// 清理无效订单数据
+router.delete('/cleanup/invalid-orders', async (req, res) => {
+    try {
+        console.log('开始清理无效订单数据...');
+        
+        // 查找所有订单号格式不正确的订单
+        const invalidOrderPattern = /^ORDER_\d+_[a-f0-9]{24}$/;
+        
+        // 清理简单订单表
+        const invalidOrders = await orderModel.find({
+            orderNo: { $regex: invalidOrderPattern }
+        });
+        
+        if (invalidOrders.length > 0) {
+            console.log(`找到 ${invalidOrders.length} 个无效格式的简单订单`);
+            await orderModel.deleteMany({
+                orderNo: { $regex: invalidOrderPattern }
+            });
+            console.log('已清理无效格式的简单订单');
+        }
+        
+        // 清理详细订单表
+        const invalidOrderDetails = await orderDetailModel.find({
+            orderNo: { $regex: invalidOrderPattern }
+        });
+        
+        if (invalidOrderDetails.length > 0) {
+            console.log(`找到 ${invalidOrderDetails.length} 个无效格式的详细订单`);
+            await orderDetailModel.deleteMany({
+                orderNo: { $regex: invalidOrderPattern }
+            });
+            console.log('已清理无效格式的详细订单');
+        }
+        
+        res.json({
+            code: 200,
+            message: '无效订单数据清理完成',
+            data: {
+                cleanedOrders: invalidOrders.length,
+                cleanedOrderDetails: invalidOrderDetails.length
+            }
+        });
+        
+    } catch (error) {
+        console.error('清理无效订单数据失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '清理失败',
+            error: error.message
+        });
+    }
+});
 
 module.exports = router; 

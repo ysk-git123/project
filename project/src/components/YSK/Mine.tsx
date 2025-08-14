@@ -131,7 +131,7 @@ export default function Mine() {
             const username = userInfo.username || userInfo.id;
 
             // 获取订单列表而不是统计
-            const response = await fetch(`http://localhost:3000/YJL/orders/${encodeURIComponent(username)}`, {
+            const response = await fetch(`/YJL/orders/${encodeURIComponent(username)}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

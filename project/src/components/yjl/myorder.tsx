@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getUser } from '../../utils/auth';
 import { calculateOrderStats, OrderStatus } from '../../utils/orderData';
@@ -60,7 +60,7 @@ const MyOrder: React.FC = () => {
         try {
             // 从API获取真实订单数据
             if (currentUser) {
-                const response = await fetch(`http://localhost:3000/YJL/orders/${currentUser.username}`, {
+                const response = await fetch(`/YJL/orders/${currentUser.username}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -102,6 +102,14 @@ const MyOrder: React.FC = () => {
                         setOrders(convertedOrders);
                         const stats = calculateOrderStats(convertedOrders);
                         setOrderStats(stats);
+                        
+                        // 为所有待发货订单启动自动发货定时器
+                        convertedOrders.forEach((order: Order) => {
+                            if (order.status === OrderStatus.PAID) {
+                                startAutoShipTimer(order);
+                            }
+                        });
+                        
                         return;
                     }
                 }
@@ -142,8 +150,7 @@ const MyOrder: React.FC = () => {
                 case 'paid':
                 case 'success':  // 支付成功状态
                 case 'completed_payment':  // 支付完成状态
-                    // 统一将待发货状态改为已发货状态，对所有用户生效
-                    return OrderStatus.SHIPPED;  // 改为已发货
+                    return OrderStatus.PAID;  // ✅ 支付成功后显示为待发货
                 case 'shipped':
                     return OrderStatus.SHIPPED; // 已发货但未收货
                 case 'received':
@@ -163,11 +170,101 @@ const MyOrder: React.FC = () => {
         return mappedStatus;
     };
 
+    // 自动发货定时器管理
+    const autoShipTimers = useRef<Map<string, number>>(new Map());
+    
+    // 启动自动发货定时器
+    const startAutoShipTimer = (order: Order) => {
+        // 如果订单状态是待发货，启动1分钟定时器
+        if (order.status === OrderStatus.PAID) {
+            const orderNumber = order.orderNumber;
+            
+            // 清除已存在的定时器
+            if (autoShipTimers.current.has(orderNumber)) {
+                clearTimeout(autoShipTimers.current.get(orderNumber)!);
+            }
+            
+            // 启动倒计时更新定时器
+            const countdownTimer = setInterval(() => {
+                setCountdowns(prev => {
+                    const currentCountdown = prev[orderNumber] || 60;
+                    if (currentCountdown <= 1) {
+                        clearInterval(countdownTimer);
+                        return { ...prev, [orderNumber]: 0 };
+                    }
+                    return { ...prev, [orderNumber]: currentCountdown - 1 };
+                });
+            }, 1000);
+            
+            // 启动自动发货定时器
+            const timer = setTimeout(async () => {
+                try {
+                    console.log(`订单 ${orderNumber} 自动发货倒计时结束，开始自动发货`);
+                    
+                    // 调用自动发货API
+                    const response = await fetch(`/YJL/order/auto-ship/${orderNumber}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.code === 200) {
+                            console.log(`订单 ${orderNumber} 自动发货成功`);
+                            // 刷新订单数据
+                            fetchOrders(false);
+                        } else {
+                            console.error(`订单 ${orderNumber} 自动发货失败:`, result.message);
+                        }
+                    } else {
+                        console.error(`订单 ${orderNumber} 自动发货API调用失败`);
+                    }
+                } catch (error) {
+                    console.error(`订单 ${orderNumber} 自动发货异常:`, error);
+                } finally {
+                    // 清除定时器引用
+                    autoShipTimers.current.delete(orderNumber);
+                    clearInterval(countdownTimer);
+                }
+            }, 60000); // 1分钟 = 60000毫秒
+            
+            // 保存定时器引用
+            autoShipTimers.current.set(orderNumber, timer);
+            console.log(`订单 ${orderNumber} 自动发货定时器已启动，1分钟后自动发货`);
+        }
+    };
+    
+    // 清理自动发货定时器
+    const clearAutoShipTimer = (orderNumber: string) => {
+        if (autoShipTimers.current.has(orderNumber)) {
+            clearTimeout(autoShipTimers.current.get(orderNumber)!);
+            autoShipTimers.current.delete(orderNumber);
+            setCountdowns(prev => {
+                const newCountdowns = { ...prev };
+                delete newCountdowns[orderNumber];
+                return newCountdowns;
+            });
+            console.log(`订单 ${orderNumber} 自动发货定时器已清理`);
+        }
+    };
+    
     // 页面加载时获取订单
     useEffect(() => {
         if (currentUser) {
             fetchOrders();
         }
+        
+        // 页面卸载时清理所有定时器
+        return () => {
+            autoShipTimers.current.forEach((timerId) => {
+                clearTimeout(timerId);
+            });
+            autoShipTimers.current.clear();
+            console.log('所有自动发货定时器已清理');
+        };
     }, [currentUser]);
 
 
@@ -264,7 +361,7 @@ const MyOrder: React.FC = () => {
             // 构建支付URL
             const username = currentUser.username || currentUser.name || `用户_${currentUser.id}`;
             const amount = order.totalAmount.toFixed(2);
-            const payUrl = `http://localhost:3000/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}&orderNo=${order.orderNumber}`;
+            const payUrl = `/YJL/zf?username=${encodeURIComponent(username)}&amount=${amount}&orderNo=${order.orderNumber}`;
 
             // 调用支付API
             const response = await fetch(payUrl);
@@ -279,7 +376,7 @@ const MyOrder: React.FC = () => {
                     if (payWindow?.closed) {
                         // 支付窗口关闭，检查支付状态
                         try {
-                            const statusResponse = await fetch(`http://localhost:3000/YJL/order/status/${result.data.orderNo}`);
+                            const statusResponse = await fetch(`/YJL/order/status/${result.data.orderNo}`);
                             if (statusResponse.ok) {
                                 const statusResult = await statusResponse.json();
                                 if (statusResult.code === 200) {
@@ -351,7 +448,7 @@ const MyOrder: React.FC = () => {
                         
                         // 尝试调用API取消订单
                         try {
-                            const response = await fetch(`http://localhost:3000/YJL/order/cancel/${orderToCancel.id}`, {
+                            const response = await fetch(`/YJL/order/cancel/${orderToCancel.id}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -403,7 +500,7 @@ const MyOrder: React.FC = () => {
                         
                         // 尝试调用API确认收货
                         try {
-                            const response = await fetch(`http://localhost:3000/YJL/order/confirm/${orderId}`, {
+                            const response = await fetch(`/YJL/order/confirm/${orderId}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -490,7 +587,7 @@ const MyOrder: React.FC = () => {
                     if (confirm('确定要删除这个订单吗？删除后无法恢复。')) {
                         // 尝试调用API删除订单
                         try {
-                            const response = await fetch(`http://localhost:3000/YJL/order/delete/${orderId}`, {
+                            const response = await fetch(`/YJL/order/delete/${orderId}`, {
                                 method: 'DELETE'
                             });
                             if (response.ok) {
@@ -683,9 +780,6 @@ const MyOrder: React.FC = () => {
                                     {/* 订单头部 */}
                                     <div className="order-item-header">
                                         <div className="order-number">订单号: {order.orderNumber}</div>
-                                        <div className={`order-status ${getStatusClass(order.status)}`}>
-                                            {getStatusText(order.status)}
-                                        </div>
                                     </div>
 
                                     {/* 商品列表 */}
@@ -747,7 +841,7 @@ const MyOrder: React.FC = () => {
                                             </>
                                         )}
 
-                                        {/* 待发货状态：显示取消订单和催发货 */}
+                                        {/* 待发货状态：显示取消订单、催发货和倒计时 */}
                                         {order.status === OrderStatus.PAID && (
                                             <>
                                                 <button
@@ -762,6 +856,13 @@ const MyOrder: React.FC = () => {
                                                 >
                                                     催发货
                                                 </button>
+                                                {/* 倒计时显示 */}
+                                                {/* {countdowns[order.orderNumber] > 0 && (
+                                                    <div className="countdown-display">
+                                                        <span className="countdown-label">自动发货倒计时:</span>
+                                                        <span className="countdown-time">{countdowns[order.orderNumber]}秒</span>
+                                                    </div>
+                                                )} */}
                                             </>
                                         )}
 

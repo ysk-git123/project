@@ -173,7 +173,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: 'SET_ERROR', payload: null });
         
         try {
-            const response = await fetch('http://localhost:3000/YSK/cart', {
+            const response = await fetch('/YSK/cart', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -227,7 +227,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 return false;
             }
 
-            const response = await fetch('http://localhost:3000/YSK/refresh', {
+            const response = await fetch('/YSK/refresh', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -275,7 +275,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: 'SET_ERROR', payload: null });
         
         try {
-            const response = await fetch('http://localhost:3000/YSK/cart/add', {
+            const response = await fetch('/YSK/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -353,7 +353,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 size: item.size
             };
 
-            const response = await fetch('http://localhost:3000/YSK/cart/remove', {
+            const response = await fetch('/YSK/cart/remove', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -405,7 +405,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 return;
             }
 
-            const response = await fetch('http://localhost:3000/YSK/cart/update', {
+            const response = await fetch('/YSK/cart/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -449,7 +449,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: 'SET_ERROR', payload: null });
         
         try {
-            const response = await fetch('http://localhost:3000/YSK/cart/clear', {
+            const response = await fetch('/YSK/cart/clear', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

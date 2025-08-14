@@ -4,7 +4,8 @@ const JWT = require('jsonwebtoken');
 const { userModel } = require('../../database/Login');
 const { shopModel } = require('../../database/shop');
 const mongoose = require('mongoose');
-const tokenConfig = require('../../middlewarelzy/authConfig');
+const authConfig = require('../../middlewarelzy/authConfig');
+const verifyAccessToken = require('../../middlewarelzy/verifyAccessToken');
 
 
 // 购物车模型
@@ -46,15 +47,17 @@ router.post('/login', async (req, res) => {
                 userId: user._id,
                 username: user.username,
             },
-            tokenConfig.secrets.accessToken,
-            { expiresIn: tokenConfig.expiresIn.accessToken }
+            authConfig.secrets.accessToken,
+            { expiresIn: authConfig.expiresIn.accessToken }
         );
 
         const refreshToken = JWT.sign(
             { userId: user._id },
-            tokenConfig.secrets.refreshToken,
-            { expiresIn: tokenConfig.expiresIn.refreshToken }
+            authConfig.secrets.refreshToken,
+            { expiresIn: authConfig.expiresIn.refreshToken }
         );
+
+
 
         res.json({
             success: true,
@@ -97,7 +100,7 @@ router.post('/refresh', async (req, res) => {
         }
 
         // 验证刷新令牌
-        const decoded = JWT.verify(refreshToken, tokenConfig.secrets.refreshToken);
+        const decoded = JWT.verify(refreshToken, authConfig.secrets.refreshToken);
         const user = await userModel.findById(decoded.userId)
 
         if (!user || user.status === 0) {
@@ -117,8 +120,8 @@ router.post('/refresh', async (req, res) => {
                 email: user.email,
                 create_time: user.create_time
             },
-            tokenConfig.secrets.accessToken,
-            { expiresIn: tokenConfig.expiresIn.accessToken }
+            authConfig.secrets.accessToken,
+            { expiresIn: authConfig.expiresIn.accessToken }
         );
 
         res.json({
@@ -193,9 +196,19 @@ router.get('/shop', async (req, res) => {
 });
 
 
-// 获取商品分类
-router.get('/shop/categories', async (req, res) => {
+// 获取商品分类（使用统一认证中间件）
+router.get('/shop/categories', verifyAccessToken, async (req, res) => {
     try {
+        // 从请求对象中获取用户信息（由认证中间件提供）
+        const user = req.user;
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户未认证'
+            });
+        }
+
         // 获取所有不重复的分类
         const categories = await shopModel.distinct('category');
 
@@ -205,8 +218,6 @@ router.get('/shop/categories', async (req, res) => {
         // 按字母顺序排序
         const sortedCategories = validCategories.sort();
 
-        console.log('获取到的分类:', sortedCategories);
-
         res.json({
             success: true,
             message: '获取分类成功',
@@ -214,9 +225,214 @@ router.get('/shop/categories', async (req, res) => {
         });
     } catch (error) {
         console.error('获取分类错误:', error);
+        
+        // 处理JWT相关错误
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                message: '登录已过期，请重新登录',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+        
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({
+                success: false,
+                message: '登录凭证无效，请重新登录',
+                code: 'TOKEN_INVALID'
+            });
+        }
+        
+        // 其他错误返回500
         res.status(500).json({
             success: false,
-            message: '获取分类失败'
+            message: '获取分类失败',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+// ==================== 商品审核相关API ====================
+
+// 获取审核商品列表
+router.get('/audit-products', verifyAccessToken, async (req, res) => {
+    try {
+        const { page = 1, pageSize = 10, status, category, search } = req.query;
+        
+        // 从认证中间件获取用户信息
+        const user = req.user;
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户未认证'
+            });
+        }
+
+        // 构建查询条件 - 兼容现有数据
+        let query = {};
+        
+        // 如果用户有merchantCode，则按merchantCode筛选
+        if (user.merchantCode) {
+            query.merchantCode = user.merchantCode;
+        }
+        
+        if (status && status !== '') {
+            query.status = status;
+        }
+        
+        if (category && category !== '') {
+            query.category = category;
+        }
+        
+        if (search && search !== '') {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        // 分页查询
+        const skip = (parseInt(page) - 1) * parseInt(pageSize);
+        const auditProducts = await shopModel.find(query)
+            .sort({ createTime: -1 })
+            .skip(skip)
+            .limit(parseInt(pageSize));
+
+        const total = await shopModel.countDocuments(query);
+
+        res.json({
+            success: true,
+            message: '获取审核商品列表成功',
+            data: {
+                list: auditProducts,
+                pagination: {
+                    current: parseInt(page),
+                    pageSize: parseInt(pageSize),
+                    total: total
+                }
+            }
+        });
+    } catch (error) {
+        console.error('获取审核商品列表错误:', error);
+        
+        // 返回500错误
+        res.status(500).json({
+            success: false,
+            message: '获取审核商品列表失败',
+            code: 'INTERNAL_ERROR'
+        });
+    }
+});
+
+// 审核商品（通过/拒绝）
+router.put('/audit-products/:productId', verifyAccessToken, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { action, reason } = req.body; // action: 'approve' 或 'reject'
+        
+        // 从认证中间件获取用户信息
+        const user = req.user;
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户未认证'
+            });
+        }
+
+        const product = await shopModel.findById(productId);
+        
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: '商品不存在'
+            });
+        }
+
+        // 检查权限（只有管理员或商品所有者可以审核）
+        if (user.role !== 'admin' && product.merchantCode !== user.merchantCode) {
+            return res.status(403).json({
+                success: false,
+                message: '无权操作此商品'
+            });
+        }
+
+        // 更新商品状态
+        if (action === 'approve') {
+            product.status = 'approved';
+            product.auditTime = new Date();
+            product.auditor = user.username;
+        } else if (action === 'reject') {
+            product.status = 'rejected';
+            product.rejectReason = reason;
+            product.auditTime = new Date();
+            product.auditor = user.username;
+        }
+
+        await product.save();
+
+        res.json({
+            success: true,
+            message: action === 'approve' ? '商品审核通过' : '商品审核拒绝',
+            data: product
+        });
+    } catch (error) {
+        console.error('审核商品错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '审核商品失败'
+        });
+    }
+});
+
+// 重新提交商品审核
+router.put('/resubmit-products/:productId', verifyAccessToken, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        
+        // 从认证中间件获取用户信息
+        const user = req.user;
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: '用户未认证'
+            });
+        }
+
+        const product = await shopModel.findById(productId);
+        
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: '商品不存在'
+            });
+        }
+
+        // 检查权限（只有商品所有者可以重新提交）
+        if (product.merchantCode !== user.merchantCode) {
+            return res.status(403).json({
+                success: false,
+                message: '无权操作此商品'
+            });
+        }
+
+        // 重置为待审核状态
+        product.status = 'pending';
+        product.rejectReason = undefined;
+        product.auditTime = undefined;
+        product.auditor = undefined;
+
+        await product.save();
+
+        res.json({
+            success: true,
+            message: '商品重新提交审核成功',
+            data: product
+        });
+    } catch (error) {
+        console.error('重新提交商品审核错误:', error);
+        res.status(500).json({
+            success: false,
+            message: '重新提交商品审核失败'
         });
     }
 });
@@ -722,6 +938,65 @@ router.delete('/cart/clear', async (req, res) => {
             message: '清空购物车失败'
         });
     }
+});
+
+// 添加商品接口
+router.post('/add-product', verifyAccessToken, async (req, res) => {
+  try {
+    const { name, price, category, description, image, color, size, stock, status } = req.body;
+    
+    // 从认证中间件获取用户信息
+    const user = req.user;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: '用户未认证'
+      });
+    }
+
+    // 验证必填字段
+    if (!name || !price || !category || !image || !color || !size || stock === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必填字段'
+      });
+    }
+
+    // 创建新商品
+    const newProduct = new shopModel({
+      name,
+      price: parseFloat(price),
+      category,
+      description: description || '',
+      image,
+      color: Array.isArray(color) ? color : [color],
+      size: Array.isArray(size) ? size : [size],
+      stock: parseInt(stock),
+      status: status || 'pending',
+      merchantCode: user.merchantCode || 'default',
+      createTime: new Date(),
+      updateTime: new Date()
+    });
+
+    const savedProduct = await newProduct.save();
+
+    res.status(201).json({
+      success: true,
+      message: '商品添加成功',
+      data: {
+        productId: savedProduct._id,
+        message: '商品已提交审核'
+      }
+    });
+  } catch (error) {
+    console.error('添加商品失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '添加商品失败',
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;
