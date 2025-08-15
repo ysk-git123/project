@@ -31,7 +31,7 @@ const CustomerService: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [sessionId, setSessionId] = useState('default');
+    const [sessionId, setSessionId] = useState(`session_${Date.now()}`);
     const [sessions, setSessions] = useState<Session[]>([]);
     const [showSessions, setShowSessions] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -91,12 +91,6 @@ const CustomerService: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // 创建新的会话ID（如果还没有的话）
-            const currentSessionId = sessionId === 'default' ? `session_${Date.now()}` : sessionId;
-            if (sessionId === 'default') {
-                setSessionId(currentSessionId);
-            }
-
             // 添加空的助手消息占位符
             const assistantMessage: Message = {
                 role: 'assistant',
@@ -109,7 +103,7 @@ const CustomerService: React.FC = () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
                 controller.abort();
-            }, 300000); // 增加到300秒(5分钟)超时
+            }, 300000);
 
             // 发送流式请求
             const response = await fetch('/YJL/chat', {
@@ -119,8 +113,8 @@ const CustomerService: React.FC = () => {
                 },
                 body: JSON.stringify({
                     message: userMessage.content,
-                    sessionId: currentSessionId,
-                    productInfo: productInfo // 传递商品信息
+                    sessionId: sessionId,
+                    productInfo: productInfo
                 }),
                 signal: controller.signal
             });
@@ -152,14 +146,13 @@ const CustomerService: React.FC = () => {
                             
                             if (data === '[DONE]') {
                                 setIsLoading(false);
-                                loadSessions(); // 刷新会话列表
+                                loadSessions();
                                 return;
                             }
 
                             try {
                                 const parsed = JSON.parse(data);
                                 if (parsed.error) {
-                                    // 处理错误响应
                                     setMessages(prev => {
                                         const newMessages = [...prev];
                                         const lastMessage = newMessages[newMessages.length - 1];
@@ -204,7 +197,6 @@ const CustomerService: React.FC = () => {
                 errorMessage = error.message;
             }
             
-            // 更新最后一条助手消息为错误信息
             setMessages(prev => {
                 const newMessages = [...prev];
                 const lastMessage = newMessages[newMessages.length - 1];
@@ -428,4 +420,4 @@ const CustomerService: React.FC = () => {
     );
 };
 
-export default CustomerService; 
+export default CustomerService;
