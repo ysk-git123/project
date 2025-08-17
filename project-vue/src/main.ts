@@ -3,6 +3,7 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import App from './App.vue';
+import './main.scss';
 import router from './router/index';
 import store from './store/index';
 import { debounce } from './utils/debounce';

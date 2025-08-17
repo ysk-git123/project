@@ -20,6 +20,8 @@ export default createStore({
     },
     toggleTheme(state) {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
+      // 持久化到localStorage
+      // localStorage.setItem('theme', state.theme);
     },
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;

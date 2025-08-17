@@ -1,8 +1,11 @@
 <template>
   <div class="finance-container">
     <div class="page-header">
-      <!-- <h2>综合统计</h2> -->
-      <div><el-button>导出</el-button></div>
+      <div ref="exportHeader" class="export-header">
+        <h3>综合统计</h3>
+        <p class="export-date">{{ exportDateText }}</p>
+      </div>
+      <div><el-button @click="handleExport">导出</el-button></div>
       <div class="date-range">
         <el-date-picker
           v-model="dateRange"
@@ -15,38 +18,47 @@
       </div>
     </div>
 
-    <!-- 订单统计表格 -->
-    <el-card class="table-card">
-      <template #header>
-        <div class="card-header">
-          <span>订单统计</span>
-        </div>
-      </template>
-      <el-table :data="orderStatistics" style="width: 100%">
-        <el-table-column prop="name" label="统计项" width="300" />
-        <el-table-column prop="value" label="数值" width="300" />
-      </el-table>
-    </el-card>
+    <div ref="exportContent" class="export-content">
+      <!-- 订单统计表格 -->
+      <el-card class="table-card">
+        <template #header>
+          <div class="card-header">
+            <span>订单统计</span>
+          </div>
+        </template>
+        <el-table :data="orderStatistics" style="width: 100%">
+          <el-table-column prop="name" label="统计项" width="300" />
+          <el-table-column prop="value" label="数值" width="300" />
+        </el-table>
+      </el-card>
+      <!-- </div> -->
 
-    <!-- 会员统计表格 -->
-    <el-card class="table-card" style="margin-top: 24px">
-      <template #header>
-        <div class="card-header">
-          <span>会员统计</span>
-        </div>
-      </template>
-      <el-table :data="memberStatistics" style="width: 100%">
-        <el-table-column prop="name" label="统计项" width="300" />
-        <el-table-column prop="value" label="数值" width="300" />
-      </el-table>
-    </el-card>
+      <!-- <div ref="exportContainer" class="export-container"> -->
+      <!-- 会员统计表格 -->
+      <el-card class="table-card" style="margin-top: 24px">
+        <template #header>
+          <div class="card-header">
+            <span>会员统计</span>
+          </div>
+        </template>
+        <el-table :data="memberStatistics" style="width: 100%">
+          <el-table-column prop="name" label="统计项" width="300" />
+          <el-table-column prop="value" label="数值" width="300" />
+        </el-table>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, nextTick } from 'vue';
+  import { ref, computed } from 'vue';
   import { ElMessage } from 'element-plus';
-  import * as echarts from 'echarts';
+  // import * as echarts from 'echarts';
+  // 导入导出相关库
+  // import * as XLSX from 'xlsx';
+  // import { saveAs } from 'file-saver';
+  // 导出图片
+  import html2canvas from 'html2canvas';
 
   // 日期范围
   const dateRange = ref<[Date, Date]>([new Date('2023-01-01'), new Date('2023-12-31')]);
@@ -73,34 +85,66 @@
     { name: '用户平均购物额', value: '¥1,000.00' },
   ]);
 
-  // 销售趋势数据
-  const salesTrendData = ref([
-    { month: '1月', sales: 95000 },
-    { month: '2月', sales: 120000 },
-    { month: '3月', sales: 110000 },
-    { month: '4月', sales: 135000 },
-    { month: '5月', sales: 140000 },
-    { month: '6月', sales: 160000 },
-    { month: '7月', sales: 155000 },
-    { month: '8月', sales: 170000 },
-    { month: '9月', sales: 180000 },
-    { month: '10月', sales: 175000 },
-    { month: '11月', sales: 190000 },
-    { month: '12月', sales: 210000 },
-  ]);
+  // 导出日期文本
+  const exportDateText = computed(() => {
+    return `统计日期: ${formatDate(dateRange.value[0])} 至 ${formatDate(dateRange.value[1])}`;
+  });
+  console.log(exportDateText);
 
-  // 支出分类数据
-  const expenseCategoryData = ref([
-    { name: '采购成本', value: 250000 },
-    { name: '员工薪资', value: 180000 },
-    { name: '房租水电', value: 80000 },
-    { name: '营销费用', value: 60000 },
-    { name: '其他支出', value: 58540 },
-  ]);
+  // 导出相关的DOM引用
+  const exportHeader = ref<HTMLDivElement | null>(null);
+  const exportContent = ref<HTMLDivElement | null>(null);
 
-  // 图表引用
-  const salesTrendRef = ref<HTMLDivElement | null>(null);
-  const expenseCategoryRef = ref<HTMLDivElement | null>(null);
+  // 导出
+  const handleExport = () => {
+    if (!exportHeader.value || !exportContent.value) {
+      ElMessage.error('导出失败，请稍后再试');
+      return;
+    }
+
+    // 创建一个临时容器来合并头部和内容
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.width = '800px';
+    tempContainer.style.padding = '20px';
+    tempContainer.style.backgroundColor = '#fff';
+    tempContainer.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+
+    // 克隆头部和内容
+    const headerClone = exportHeader.value.cloneNode(true) as HTMLElement;
+    const contentClone = exportContent.value.cloneNode(true) as HTMLElement;
+
+    // 添加到临时容器
+    tempContainer.appendChild(headerClone);
+    tempContainer.appendChild(contentClone);
+    document.body.appendChild(tempContainer);
+
+    // 使用html2canvas捕获临时容器
+    html2canvas(tempContainer, {
+      scale: 2, // 提高分辨率
+      useCORS: true,
+      logging: false,
+    })
+      .then((canvas) => {
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = `财务统计_${formatDate(new Date())}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // 清理临时容器
+        document.body.removeChild(tempContainer);
+
+        ElMessage.success('导出成功');
+      })
+      .catch((error) => {
+        console.error('导出失败:', error);
+        ElMessage.error('导出失败，请稍后重试');
+        document.body.removeChild(tempContainer);
+      });
+  };
 
   // 处理日期范围变化
   const handleDateChange = (range: [Date, Date] | null) => {
@@ -108,7 +152,7 @@
       ElMessage.success(`已选择日期范围: ${formatDate(range[0])} 至 ${formatDate(range[1])}`);
       // 实际项目中，这里会调用API获取对应日期范围的数据
       // 更新图表数据
-      updateCharts();
+      // updateCharts();
     }
   };
 
@@ -116,134 +160,6 @@
   const formatDate = (date: Date) => {
     return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
   };
-
-  // 初始化图表
-  const initCharts = () => {
-    nextTick(() => {
-      // 初始化销售趋势图
-      if (salesTrendRef.value) {
-        const salesChart = echarts.init(salesTrendRef.value);
-        const salesOption = {
-          tooltip: {
-            trigger: 'axis',
-            formatter: '{b}: ¥{c}',
-          },
-          grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true,
-          },
-          xAxis: {
-            type: 'category',
-            data: salesTrendData.value.map((item) => item.month),
-          },
-          yAxis: {
-            type: 'value',
-            axisLabel: {
-              formatter: '¥{value}',
-            },
-          },
-          series: [
-            {
-              data: salesTrendData.value.map((item) => item.sales),
-              type: 'line',
-              smooth: true,
-              symbol: 'circle',
-              symbolSize: 8,
-              itemStyle: {
-                color: '#409EFF',
-              },
-              emphasis: {
-                focus: 'series',
-                itemStyle: {
-                  color: '#409EFF',
-                  borderColor: '#fff',
-                  borderWidth: 2,
-                  shadowBlur: 10,
-                  shadowColor: 'rgba(0, 0, 0, 0.3)',
-                },
-              },
-              lineStyle: {
-                width: 3,
-                color: '#409EFF',
-              },
-              areaStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: 'rgba(64, 158, 255, 0.5)' },
-                  { offset: 1, color: 'rgba(64, 158, 255, 0.1)' },
-                ]),
-              },
-            },
-          ],
-        };
-        salesChart.setOption(salesOption);
-
-        // 监听窗口大小变化，调整图表大小
-        window.addEventListener('resize', () => {
-          salesChart.resize();
-        });
-      }
-
-      // 初始化支出分类饼图
-      if (expenseCategoryRef.value) {
-        const expenseChart = echarts.init(expenseCategoryRef.value);
-        const expenseOption = {
-          tooltip: {
-            trigger: 'item',
-            formatter: '{a} <br/>{b}: {c} ({d}%)',
-          },
-          legend: {
-            orient: 'vertical',
-            left: 10,
-            data: expenseCategoryData.value.map((item) => item.name),
-          },
-          series: [
-            {
-              name: '支出分类',
-              type: 'pie',
-              radius: '70%',
-              center: ['50%', '50%'],
-              data: expenseCategoryData.value,
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)',
-                },
-              },
-              label: {
-                formatter: '{b}: {d}%',
-              },
-              labelLine: {
-                show: true,
-              },
-              color: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399'],
-            },
-          ],
-        };
-        expenseChart.setOption(expenseOption);
-
-        // 监听窗口大小变化，调整图表大小
-        window.addEventListener('resize', () => {
-          expenseChart.resize();
-        });
-      }
-    });
-  };
-
-  // 更新图表数据
-  const updateCharts = () => {
-    // 这里可以根据新的日期范围更新图表数据
-    // 为简化示例，我们复用相同的数据
-    initCharts();
-  };
-
-  // 页面加载时执行
-  onMounted(() => {
-    console.log('财务统计页面加载完成');
-    initCharts();
-  });
 </script>
 
 <style scoped lang="scss">
@@ -251,6 +167,21 @@
     padding: 20px;
     background-color: #f5f7fa;
     min-height: 100vh;
+  }
+
+  .export-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .export-date {
+    font-size: 16px;
+    color: #303133;
+    margin-top: 10px;
+  }
+
+  .export-content {
+    width: 100%;
   }
 
   .page-header {

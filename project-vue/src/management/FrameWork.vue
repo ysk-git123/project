@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="framework-container">
     <div class="admin">
       <div>商城管理后台</div>
       <div class="nav">
@@ -25,7 +25,7 @@
         </div>
       </div>
     </div>
-    <div>
+    <div class="content-area">
       <router-view></router-view>
     </div>
   </div>
@@ -75,16 +75,27 @@
 </script>
 
 <style scoped lang="scss">
+  // .framework-container {
+  //   min-height: 100vh;
+  //   display: flex;
+  //   flex-direction: column;
+  // }
   .admin {
     width: 99%;
     height: 3rem;
-    background: rgb(91, 91, 91);
-    border: 0.01rem solid rgb(184, 184, 184);
+    background: var(--header-bg);
+    border: 0.01rem solid var(--border-color);
     display: flex;
     justify-content: space-between;
     line-height: 3rem;
-    color: white;
+    color: var(--text-color);
     padding: 0rem 0.5rem;
+  }
+  .content-area {
+    flex: 1;
+    background-color: var(--card-bg);
+    padding-right: 20px;
+    transition: background-color 0.3s ease;
   }
   .nav {
     // width: 40rem;
@@ -115,11 +126,11 @@
     padding: 0.5rem 0; // 保持点击区域
   }
   .nav-link.router-link-exact-active {
-    color: rgb(103, 204, 255); // 激活状态颜色
+    color: var(--active-color);
     font-weight: bold; // 激活状态加粗
   }
   .nav-item:hover {
-    color: rgb(103, 204, 255);
+    color: var(--active-color);
   }
   .user {
     width: 15rem;

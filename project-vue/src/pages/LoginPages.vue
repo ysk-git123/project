@@ -142,7 +142,7 @@
   }
   .login-btn {
     width: 50%;
-    margin: 0 auto;
+    margin: 2rem auto;
   }
   .dl_btn {
     width: 100%;

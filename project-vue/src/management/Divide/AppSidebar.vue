@@ -34,19 +34,19 @@
   .aside {
     width: 12.7rem;
     height: 38rem;
-    background: rgb(244, 244, 244);
-    border: 0.01rem solid rgb(218, 218, 218);
+    background: var(--sidebar-bg);
+    border: 0.01rem solid var(--border-color);
     overflow-y: auto;
   }
 
   .aside-title {
     width: 100%;
-    border-bottom: 0.01rem solid rgb(217, 217, 217);
+    border-bottom: 0.01rem solid var(--border-color);
     height: 3.65rem;
     text-align: center;
     line-height: 3.65rem;
     font-size: 1.2rem;
-    color: rgb(60, 60, 60);
+    color: var(--text-color);
   }
 
   .nav-link {
@@ -54,12 +54,12 @@
     height: 3rem;
     text-align: center;
     line-height: 3rem;
-    border-bottom: 0.01rem solid rgb(220, 220, 220);
-    color: rgb(105, 105, 105);
+    border-bottom: 0.01rem solid var(--border-color);
+    color: var(--text-color);
     cursor: pointer;
   }
 
   .nav-link:hover {
-    background-color: #f0f0f0;
+    background-color: var(--header-bg);
   }
 </style>
