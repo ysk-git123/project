@@ -1,7 +1,16 @@
 import { createStore } from 'vuex';
 import createPersistedState from 'vuex-persistedstate';
 
-export default createStore({
+// 定义状态接口
+interface State {
+  currentContent: string;
+  theme: string;
+  sidebarOpen: boolean;
+  isLoggedIn: boolean;
+  userInfo: { [key: string]: unknown } | null;
+}
+
+export default createStore<State>({
   state: {
     currentContent: '',
     userInfo: null,
@@ -23,14 +32,17 @@ export default createStore({
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;
     },
-    login(state, { userInfo }) {
-      state.isLoggedIn = true;
-      state.userInfo = userInfo;
+    login(state, payload) {
+      state.isLoggedIn = payload.isLoggedIn !== undefined ? payload.isLoggedIn : true;
+      state.userInfo = payload.userInfo || null;
+      console.log('Store updated:', state);
     },
     logout(state) {
       state.isLoggedIn = false;
       state.userInfo = null;
-    },
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    }
   },
   actions: {},
   modules: {},

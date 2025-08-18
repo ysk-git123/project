@@ -72,6 +72,11 @@ export const login = (data: LoginData): Promise<ApiResponse<LoginResponseData>> 
     url: '/LZY/login',
     method: 'post',
     data,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    withCredentials: true // 允许携带cookie
   });
 };
 

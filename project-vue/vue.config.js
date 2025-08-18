@@ -36,25 +36,31 @@ module.exports = {
     open: true,
     proxy: {
       '/upload': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        pathRewrite: { '^/upload': '' },
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        pathRewrite: { '^/api': '' },
       },
       '/YSK': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        pathRewrite: { '^/YSK': '' },
       },
       '/LZY': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false
-      }
-    }
-  }
+        secure: false,
+        pathRewrite: { '^/LZY': '' },
+        logLevel: 'debug', // 添加日志级别便于调试
+        timeout: 10000, // 增加超时时间
+      },
+    },
+  },
 };

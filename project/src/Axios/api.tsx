@@ -82,7 +82,7 @@ httpClient.interceptors.response.use(
                 // 刷新失败，跳转到登录页
                 TokenManager.clearTokens();
                 window.location.href = '/login';
-                return Promise.reject(error);
+                return Promise.reject(refreshError);
             }
         }
         

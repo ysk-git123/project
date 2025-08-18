@@ -24,7 +24,7 @@ export function beforeEachGuard(
   }
 
   // 检查是否已登录
-  const isLoggedIn = store.state.isLoggedIn || localStorage.getItem('accessToken');
+  const isLoggedIn = store.state.isLoggedIn || localStorage.getItem('accessToken') !== null;
   const userInfo = store.state.userInfo;
 
   console.log('登录状态:', isLoggedIn);
@@ -32,6 +32,15 @@ export function beforeEachGuard(
   console.log('当前路径:', to.path);
 
   if (isLoggedIn) {
+    // 如果用户信息不完整，尝试从本地存储获取
+    if (!userInfo && localStorage.getItem('accessToken')) {
+      // 这里可以添加从token解析用户信息的逻辑
+      // 或者跳转到一个初始化用户信息的页面
+      console.log('用户信息缺失，重定向到登录页');
+      next('/');
+      return;
+    }
+
     // 如果是管理员角色，直接放行
     if (
       userInfo &&

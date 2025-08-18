@@ -5,36 +5,87 @@
         <h2>添加商品</h2>
       </template>
 
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="product-form">
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="120px"
+        class="product-form"
+      >
         <!-- 商品名称 -->
-        <el-form-item label="商品名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入商品名称" maxlength="100" show-word-limit />
+        <el-form-item
+          label="商品名称"
+          prop="name"
+        >
+          <el-input
+            v-model="formData.name"
+            placeholder="请输入商品名称"
+            maxlength="100"
+            show-word-limit
+          />
         </el-form-item>
 
         <!-- 商品分类 -->
-        <el-form-item label="商品分类" prop="category">
-          <el-select v-model="formData.category" placeholder="请选择商品分类" style="width: 100%"
-            :disabled="categories.length === 0">
-            <el-option v-for="category in categories" :key="category" :label="category" :value="category" />
+        <el-form-item
+          label="商品分类"
+          prop="category"
+        >
+          <el-select
+            v-model="formData.category"
+            placeholder="请选择商品分类"
+            style="width: 100%"
+            :disabled="categories.length === 0"
+          >
+            <el-option
+              v-for="category in categories"
+              :key="category"
+              :label="category"
+              :value="category"
+            />
           </el-select>
-          <div v-if="categories.length === 0" class="category-error">
-            <el-alert title="分类数据加载失败" description="请检查网络连接或联系管理员" type="error" :closable="false" show-icon />
+          <div
+            v-if="categories.length === 0"
+            class="category-error"
+          >
+            <el-alert
+              title="分类数据加载失败"
+              description="请检查网络连接或联系管理员"
+              type="error"
+              :closable="false"
+              show-icon
+            />
           </div>
         </el-form-item>
 
         <!-- 商品价格 -->
-        <el-form-item label="商品价格" prop="price">
-          <el-input-number v-model="formData.price" :min="0.01" :max="99999" :precision="2" :step="0.01"
-            style="width: 100%" placeholder="请输入商品价格" :controls="true" controls-position="right"
-            :formatter="(value: number) => `¥${value}`" :parser="(value: string) => value.replace('¥', '')" />
-          <div class="price-tip">价格范围：¥0.01 - ¥99,999.00</div>
+        <el-form-item
+          label="商品价格"
+          prop="price"
+        >
+          <el-input-number
+            v-model="formData.price"
+            :min="0.01"
+            :max="99999"
+            :precision="2"
+            :step="0.01"
+            style="width: 100%"
+            placeholder="请输入商品价格"
+            :controls="true"
+            controls-position="right"
+            :formatter="(value: number) => `¥${value}`"
+            :parser="(value: string) => value.replace('¥', '')"
+          />
+          <div class="price-tip">
+            价格范围：¥0.01 - ¥99,999.00
+          </div>
         </el-form-item>
 
         <!-- 商品图片 -->
-        <el-form-item label="商品图片" prop="image">
+        <el-form-item
+          label="商品图片"
+          prop="image"
+        >
           <div class="image-upload-container">
-
-            
             <el-upload 
               class="image-uploader" 
               :http-request="customUpload"
@@ -46,73 +97,163 @@
               name="file"
               drag
             >
-              <img v-if="formData.image" :src="formData.image" class="uploaded-image" @error="handleImageLoadError" />
-              <div v-else class="upload-placeholder">
+              <img
+                v-if="formData.image"
+                :src="formData.image"
+                class="uploaded-image"
+                @error="handleImageLoadError"
+              >
+              <div
+                v-else
+                class="upload-placeholder"
+              >
                 <el-icon class="image-uploader-icon">
                   <Plus />
                 </el-icon>
-                <div class="upload-text">点击或拖拽上传图片</div>
+                <div class="upload-text">
+                  点击或拖拽上传图片
+                </div>
               </div>
             </el-upload>
             
             <!-- 图片预览和删除 -->
-            <div v-if="formData.image" class="image-actions">
-              <el-button type="primary" size="small" @click="previewImage">预览</el-button>
-              <el-button type="danger" size="small" @click="removeImage">删除</el-button>
+            <div
+              v-if="formData.image"
+              class="image-actions"
+            >
+              <el-button
+                type="primary"
+                size="small"
+                @click="previewImage"
+              >
+                预览
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                @click="removeImage"
+              >
+                删除
+              </el-button>
             </div>
           </div>
-          <div class="upload-tip">支持 JPG、PNG、WEBP 格式，建议尺寸 800x800</div>
+          <div class="upload-tip">
+            支持 JPG、PNG、WEBP 格式，建议尺寸 800x800
+          </div>
         </el-form-item>
 
         <!-- 商品颜色 -->
-        <el-form-item label="商品颜色" prop="color">
+        <el-form-item
+          label="商品颜色"
+          prop="color"
+        >
           <div class="color-selector">
-            <el-tag v-for="color in availableColors" :key="color"
-              :class="{ 'selected': formData.color.includes(color) }" @click="toggleColor(color)" class="color-tag">
+            <el-tag
+              v-for="color in availableColors"
+              :key="color"
+              :class="{ 'selected': formData.color.includes(color) }"
+              class="color-tag"
+              @click="toggleColor(color)"
+            >
               {{ color }}
             </el-tag>
-            <el-input v-if="showCustomColor" v-model="customColor" placeholder="输入自定义颜色" size="small"
-              style="width: 120px; margin-left: 10px;" @keyup.enter="addCustomColor" />
-            <el-button v-if="!showCustomColor" type="primary" link @click="showCustomColor = true" size="small">
+            <el-input
+              v-if="showCustomColor"
+              v-model="customColor"
+              placeholder="输入自定义颜色"
+              size="small"
+              style="width: 120px; margin-left: 10px;"
+              @keyup.enter="addCustomColor"
+            />
+            <el-button
+              v-if="!showCustomColor"
+              type="primary"
+              link
+              size="small"
+              @click="showCustomColor = true"
+            >
               添加颜色
             </el-button>
           </div>
         </el-form-item>
 
         <!-- 商品尺码 -->
-        <el-form-item label="商品尺码" prop="size">
+        <el-form-item
+          label="商品尺码"
+          prop="size"
+        >
           <div class="size-selector">
-            <el-tag v-for="size in availableSizes" :key="size" :class="{ 'selected': formData.size.includes(size) }"
-              @click="toggleSize(size)" class="size-tag">
+            <el-tag
+              v-for="size in availableSizes"
+              :key="size"
+              :class="{ 'selected': formData.size.includes(size) }"
+              class="size-tag"
+              @click="toggleSize(size)"
+            >
               {{ size }}
             </el-tag>
-            <el-input v-if="showCustomSize" v-model="customSize" placeholder="输入自定义尺码" size="small"
-              style="width: 120px; margin-left: 10px;" @keyup.enter="addCustomSize" />
-            <el-button v-if="!showCustomSize" type="primary" link @click="showCustomSize = true" size="small">
+            <el-input
+              v-if="showCustomSize"
+              v-model="customSize"
+              placeholder="输入自定义尺码"
+              size="small"
+              style="width: 120px; margin-left: 10px;"
+              @keyup.enter="addCustomSize"
+            />
+            <el-button
+              v-if="!showCustomSize"
+              type="primary"
+              link
+              size="small"
+              @click="showCustomSize = true"
+            >
               添加尺码
             </el-button>
           </div>
         </el-form-item>
 
         <!-- 商品库存 -->
-        <el-form-item label="商品库存" prop="stock">
-          <el-input-number v-model="formData.stock" :min="0" :precision="0" placeholder="请输入商品库存" />
+        <el-form-item
+          label="商品库存"
+          prop="stock"
+        >
+          <el-input-number
+            v-model="formData.stock"
+            :min="0"
+            :precision="0"
+            placeholder="请输入商品库存"
+          />
         </el-form-item>
 
         <!-- 商品描述 -->
-        <el-form-item label="商品描述" prop="description">
-          <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入商品详细描述" maxlength="500"
-            show-word-limit />
+        <el-form-item
+          label="商品描述"
+          prop="description"
+        >
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入商品详细描述"
+            maxlength="500"
+            show-word-limit
+          />
         </el-form-item>
 
 
 
         <!-- 提交按钮 -->
         <el-form-item>
-          <el-button type="primary" @click="submitForm" :loading="submitting">
+          <el-button
+            type="primary"
+            :loading="submitting"
+            @click="submitForm"
+          >
             提交审核
           </el-button>
-          <el-button @click="resetForm">重置</el-button>
+          <el-button @click="resetForm">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>

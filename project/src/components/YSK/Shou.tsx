@@ -101,7 +101,7 @@ const categoryNames: Record<string, string> = {
 };
 
 // 全局缓存对象
-let homeCache: {
+const homeCache: {
   categories?: string[];
   products?: Product[];
 } = {};
@@ -233,9 +233,9 @@ export default function Shou() {
       setUpdating(true);
       Promise.all([fetchCategories(), fetchProducts(1)]).then(([cats, prodsRes]) => {
         setUpdating(false);
-        let catsChanged = !shallowEqualArray(cats, homeCache.categories);
+        const catsChanged = !shallowEqualArray(cats, homeCache.categories);
 
-        let prodsChanged = !shallowEqualArray(prodsRes.list.map(p => p._id), (homeCache.products || []).map(p => p._id));
+        const prodsChanged = !shallowEqualArray(prodsRes.list.map(p => p._id), (homeCache.products || []).map(p => p._id));
         if (catsChanged) {
           setCategories(cats);
           homeCache.categories = cats;

@@ -9,16 +9,41 @@
       <div class="filter-section">
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-select v-model="filterStatus" placeholder="审核状态" clearable @change="handleFilterChange">
-              <el-option label="全部" value="" />
-              <el-option label="审核中" value="pending" />
-              <el-option label="审核通过" value="approved" />
-              <el-option label="审核失败" value="rejected" />
+            <el-select
+              v-model="filterStatus"
+              placeholder="审核状态"
+              clearable
+              @change="handleFilterChange"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="审核中"
+                value="pending"
+              />
+              <el-option
+                label="审核通过"
+                value="approved"
+              />
+              <el-option
+                label="审核失败"
+                value="rejected"
+              />
             </el-select>
           </el-col>
           <el-col :span="6">
-            <el-select v-model="filterCategory" placeholder="商品分类" clearable @change="handleFilterChange">
-              <el-option label="全部分类" value="" />
+            <el-select
+              v-model="filterCategory"
+              placeholder="商品分类"
+              clearable
+              @change="handleFilterChange"
+            >
+              <el-option
+                label="全部分类"
+                value=""
+              />
               <el-option
                 v-for="category in categories"
                 :key="category"
@@ -31,8 +56,8 @@
             <el-input
               v-model="searchKeyword"
               placeholder="搜索商品名称"
-              @input="handleSearch"
               clearable
+              @input="handleSearch"
             >
               <template #prefix>
                 <el-icon><Search /></el-icon>
@@ -40,7 +65,11 @@
             </el-input>
           </el-col>
           <el-col :span="4">
-            <el-button type="primary" @click="refreshList" :loading="loading">
+            <el-button
+              type="primary"
+              :loading="loading"
+              @click="refreshList"
+            >
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
@@ -52,34 +81,62 @@
       <div class="audit-stats">
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-card shadow="hover" class="stat-card pending">
+            <el-card
+              shadow="hover"
+              class="stat-card pending"
+            >
               <div class="stat-content">
-                <div class="stat-number">{{ stats.pending }}</div>
-                <div class="stat-label">待审核</div>
+                <div class="stat-number">
+                  {{ stats.pending }}
+                </div>
+                <div class="stat-label">
+                  待审核
+                </div>
               </div>
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card shadow="hover" class="stat-card approved">
+            <el-card
+              shadow="hover"
+              class="stat-card approved"
+            >
               <div class="stat-content">
-                <div class="stat-number">{{ stats.approved }}</div>
-                <div class="stat-label">已通过</div>
+                <div class="stat-number">
+                  {{ stats.approved }}
+                </div>
+                <div class="stat-label">
+                  已通过
+                </div>
               </div>
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card shadow="hover" class="stat-card rejected">
+            <el-card
+              shadow="hover"
+              class="stat-card rejected"
+            >
               <div class="stat-content">
-                <div class="stat-number">{{ stats.rejected }}</div>
-                <div class="stat-label">已拒绝</div>
+                <div class="stat-number">
+                  {{ stats.rejected }}
+                </div>
+                <div class="stat-label">
+                  已拒绝
+                </div>
               </div>
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card shadow="hover" class="stat-card total">
+            <el-card
+              shadow="hover"
+              class="stat-card total"
+            >
               <div class="stat-content">
-                <div class="stat-number">{{ stats.total }}</div>
-                <div class="stat-label">总计</div>
+                <div class="stat-number">
+                  {{ stats.total }}
+                </div>
+                <div class="stat-label">
+                  总计
+                </div>
               </div>
             </el-card>
           </el-col>
@@ -89,33 +146,44 @@
       <!-- 商品列表 -->
       <div class="product-list">
         <el-table
+          v-loading="loading"
           :data="auditList"
           stripe
           border
           style="width: 100%"
           :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
-          v-loading="loading"
           table-layout="fixed"
           :fit="false"
         >
           <!-- 商品图片 -->
-          <el-table-column label="商品图片" width="100" align="center">
+          <el-table-column
+            label="商品图片"
+            width="100"
+            align="center"
+          >
             <template #default="{ row }">
               <img
                 :src="getImageUrl(row.image)"
                 :alt="row.name"
                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"
                 @error="handleImageError"
-              />
+              >
             </template>
           </el-table-column>
 
           <!-- 商品名称 -->
-          <el-table-column label="商品名称" prop="name" width="180">
+          <el-table-column
+            label="商品名称"
+            prop="name"
+            width="180"
+          >
             <template #default="{ row }">
               <div class="product-name">
                 <div class="name-container">
-                  <span class="name-text" :title="row.name">{{ row.name }}</span>
+                  <span
+                    class="name-text"
+                    :title="row.name"
+                  >{{ row.name }}</span>
                   <div class="name-actions">
                     <el-tag 
                       :type="getCategoryTagType(row.category)" 
@@ -141,23 +209,40 @@
           </el-table-column>
 
           <!-- 商品描述 -->
-          <el-table-column label="商品描述" prop="description" width="160" show-overflow-tooltip>
+          <el-table-column
+            label="商品描述"
+            prop="description"
+            width="160"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">
               <span class="description-text">{{ row.description }}</span>
             </template>
           </el-table-column>
 
           <!-- 价格 -->
-          <el-table-column label="价格" prop="price" width="120" align="center">
+          <el-table-column
+            label="价格"
+            prop="price"
+            width="120"
+            align="center"
+          >
             <template #default="{ row }">
               <span class="price-text">¥{{ row.price }}</span>
             </template>
           </el-table-column>
 
           <!-- 颜色 -->
-          <el-table-column label="颜色" width="120" align="center">
+          <el-table-column
+            label="颜色"
+            width="120"
+            align="center"
+          >
             <template #default="{ row }">
-              <div v-if="row.color && row.color.length > 0" class="color-chips">
+              <div
+                v-if="row.color && row.color.length > 0"
+                class="color-chips"
+              >
                 <div
                   v-for="color in row.color"
                   :key="color"
@@ -167,18 +252,28 @@
                   <span 
                     class="color-chip"
                     :style="{ backgroundColor: getColorValue(color) }"
-                  ></span>
+                  />
                   <span class="color-name">{{ color }}</span>
                 </div>
               </div>
-              <span v-else class="no-data">-</span>
+              <span
+                v-else
+                class="no-data"
+              >-</span>
             </template>
           </el-table-column>
 
           <!-- 尺码 -->
-          <el-table-column label="尺码" width="100" align="center">
+          <el-table-column
+            label="尺码"
+            width="100"
+            align="center"
+          >
             <template #default="{ row }">
-              <div v-if="row.size && row.size.length > 0" class="size-chips">
+              <div
+                v-if="row.size && row.size.length > 0"
+                class="size-chips"
+              >
                 <el-tag
                   v-for="size in row.size"
                   :key="size"
@@ -189,12 +284,19 @@
                   {{ size }}
                 </el-tag>
               </div>
-              <span v-else class="no-data">-</span>
+              <span
+                v-else
+                class="no-data"
+              >-</span>
             </template>
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column label="审核状态" width="120" align="center">
+          <el-table-column
+            label="审核状态"
+            width="120"
+            align="center"
+          >
             <template #default="{ row }">
               <el-tag
                 :type="getStatusTagType(row.status)"
@@ -207,23 +309,33 @@
           </el-table-column>
 
           <!-- 创建时间 -->
-          <el-table-column label="创建时间" prop="createTime" width="150" align="center">
+          <el-table-column
+            label="创建时间"
+            prop="createTime"
+            width="150"
+            align="center"
+          >
             <template #default="{ row }">
               <span class="time-text">{{ formatTime(row.createTime) }}</span>
             </template>
           </el-table-column>
 
           <!-- 操作 -->
-          <el-table-column label="操作" width="200" align="center" fixed="right">
+          <el-table-column
+            label="操作"
+            width="200"
+            align="center"
+            fixed="right"
+          >
             <template #default="{ row }">
               <div class="action-buttons">
                 <el-button 
                   v-if="row.status === 'pending'"
                   type="success" 
                   size="small" 
-                  @click="handleApprove(row)"
                   class="action-btn approve-btn"
                   :icon="Check"
+                  @click="handleApprove(row)"
                 >
                   通过
                 </el-button>
@@ -231,18 +343,18 @@
                   v-if="row.status === 'pending'"
                   type="danger" 
                   size="small" 
-                  @click="handleReject(row)"
                   class="action-btn reject-btn"
                   :icon="Close"
+                  @click="handleReject(row)"
                 >
                   拒绝
                 </el-button>
                 <el-button 
                   type="primary" 
                   size="small" 
-                  @click="handleView(row)"
                   class="action-btn view-btn"
                   :icon="View"
+                  @click="handleView(row)"
                 >
                   查看
                 </el-button>
@@ -250,9 +362,9 @@
                   v-if="row.status === 'rejected'"
                   type="warning" 
                   size="small" 
-                  @click="handleResubmit(row)"
                   class="action-btn resubmit-btn"
                   :icon="Refresh"
+                  @click="handleResubmit(row)"
                 >
                   重新提交
                 </el-button>
@@ -263,7 +375,10 @@
       </div>
 
       <!-- 分页器 -->
-      <div v-if="pagination.total > 0" class="pagination-container">
+      <div
+        v-if="pagination.total > 0"
+        class="pagination-container"
+      >
         <el-pagination
           v-model:current-page="pagination.current"
           v-model:page-size="pagination.pageSize"
@@ -283,8 +398,16 @@
       width="500px"
       :close-on-click-modal="false"
     >
-      <el-form :model="rejectForm" ref="rejectFormRef" :rules="rejectRules">
-        <el-form-item label="拒绝原因" prop="reason" label-width="80px">
+      <el-form
+        ref="rejectFormRef"
+        :model="rejectForm"
+        :rules="rejectRules"
+      >
+        <el-form-item
+          label="拒绝原因"
+          prop="reason"
+          label-width="80px"
+        >
           <el-input
             v-model="rejectForm.reason"
             type="textarea"
@@ -298,7 +421,11 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="rejectDialogVisible = false">取消</el-button>
-          <el-button type="danger" @click="confirmReject" :loading="rejecting">
+          <el-button
+            type="danger"
+            :loading="rejecting"
+            @click="confirmReject"
+          >
             确认拒绝
           </el-button>
         </span>

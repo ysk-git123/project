@@ -4,8 +4,16 @@
       <h2>商品列表</h2>
       <div class="header-actions">
         <!-- 分类筛选 -->
-        <el-select v-model="selectedCategory" placeholder="选择分类" @change="handleCategoryChange" clearable>
-          <el-option label="全部分类" value="all" />
+        <el-select
+          v-model="selectedCategory"
+          placeholder="选择分类"
+          clearable
+          @change="handleCategoryChange"
+        >
+          <el-option
+            label="全部分类"
+            value="all"
+          />
           <el-option
             v-for="category in categories"
             :key="category"
@@ -19,15 +27,19 @@
           v-model="searchKeyword"
           placeholder="搜索商品名称"
           class="search-input"
-          @input="handleSearch"
           clearable
+          @input="handleSearch"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
         
-        <el-button type="primary" :loading="loading" @click="refreshList">
+        <el-button
+          type="primary"
+          :loading="loading"
+          @click="refreshList"
+        >
           <el-icon><Refresh /></el-icon>
           刷新
         </el-button>
@@ -35,30 +47,57 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading && listData.length === 0" class="loading-container">
-      <el-skeleton :rows="5" animated />
+    <div
+      v-if="loading && listData.length === 0"
+      class="loading-container"
+    >
+      <el-skeleton
+        :rows="5"
+        animated
+      />
     </div>
 
     <!-- 错误状态 -->
-    <div v-else-if="error" class="error-container">
-      <el-empty description="加载失败" :image-size="100">
-        <el-button type="primary" @click="getList">
+    <div
+      v-else-if="error"
+      class="error-container"
+    >
+      <el-empty
+        description="加载失败"
+        :image-size="100"
+      >
+        <el-button
+          type="primary"
+          @click="getList"
+        >
           重试
         </el-button>
       </el-empty>
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="listData.length === 0" class="empty-container">
-      <el-empty description="暂无商品数据" :image-size="100">
-        <el-button type="primary" @click="getList">
+    <div
+      v-else-if="listData.length === 0"
+      class="empty-container"
+    >
+      <el-empty
+        description="暂无商品数据"
+        :image-size="100"
+      >
+        <el-button
+          type="primary"
+          @click="getList"
+        >
           刷新
         </el-button>
       </el-empty>
     </div>
 
     <!-- 商品列表表格 -->
-    <div v-else class="product-table-container">
+    <div
+      v-else
+      class="product-table-container"
+    >
       <el-table
         :data="listData"
         stripe
@@ -69,23 +108,34 @@
         :fit="true"
       >
         <!-- 商品图片 -->
-        <el-table-column label="商品图片" width="100" align="center">
+        <el-table-column
+          label="商品图片"
+          width="100"
+          align="center"
+        >
           <template #default="{ row }">
             <img
               :src="getImageUrl(row.image)"
               :alt="row.name"
               style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"
               @error="handleImageError"
-            />
+            >
           </template>
         </el-table-column>
 
         <!-- 商品名称 -->
-        <el-table-column label="商品名称" prop="name" min-width="160">
+        <el-table-column
+          label="商品名称"
+          prop="name"
+          min-width="160"
+        >
           <template #default="{ row }">
             <div class="product-name">
               <div class="name-container">
-                <span class="name-text" :title="row.name">{{ row.name }}</span>
+                <span
+                  class="name-text"
+                  :title="row.name"
+                >{{ row.name }}</span>
                 <div class="name-actions">
                   <el-tag 
                     :type="getCategoryTagType(row.category)" 
@@ -93,8 +143,8 @@
                     class="category-tag"
                     effect="light"
                   >
-                {{ row.category }}
-              </el-tag>
+                    {{ row.category }}
+                  </el-tag>
                   <el-tag 
                     v-if="row.stock !== undefined" 
                     :type="row.stock > 0 ? 'success' : 'danger'" 
@@ -111,23 +161,40 @@
         </el-table-column>
 
         <!-- 商品描述 -->
-        <el-table-column label="商品描述" prop="description" min-width="150" show-overflow-tooltip>
+        <el-table-column
+          label="商品描述"
+          prop="description"
+          min-width="150"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="description-text">{{ row.description }}</span>
           </template>
         </el-table-column>
 
         <!-- 价格 -->
-        <el-table-column label="价格" prop="price" min-width="100" align="center">
+        <el-table-column
+          label="价格"
+          prop="price"
+          min-width="100"
+          align="center"
+        >
           <template #default="{ row }">
             <span class="price-text">¥{{ row.price }}</span>
           </template>
         </el-table-column>
 
         <!-- 颜色 -->
-        <el-table-column label="颜色" min-width="120" align="center">
+        <el-table-column
+          label="颜色"
+          min-width="120"
+          align="center"
+        >
           <template #default="{ row }">
-            <div v-if="row.color && row.color.length > 0" class="color-chips">
+            <div
+              v-if="row.color && row.color.length > 0"
+              class="color-chips"
+            >
               <div
                 v-for="color in row.color"
                 :key="color"
@@ -137,18 +204,28 @@
                 <span 
                   class="color-chip"
                   :style="{ backgroundColor: getColorValue(color) }"
-              ></span>
+                />
                 <span class="color-name">{{ color }}</span>
               </div>
             </div>
-            <span v-else class="no-data">-</span>
+            <span
+              v-else
+              class="no-data"
+            >-</span>
           </template>
         </el-table-column>
 
         <!-- 尺码 -->
-        <el-table-column label="尺码" min-width="100" align="center">
+        <el-table-column
+          label="尺码"
+          min-width="100"
+          align="center"
+        >
           <template #default="{ row }">
-            <div v-if="row.size && row.size.length > 0" class="size-chips">
+            <div
+              v-if="row.size && row.size.length > 0"
+              class="size-chips"
+            >
               <el-tag
                 v-for="size in row.size"
                 :key="size"
@@ -159,45 +236,58 @@
                 {{ size }}
               </el-tag>
             </div>
-            <span v-else class="no-data">-</span>
+            <span
+              v-else
+              class="no-data"
+            >-</span>
           </template>
         </el-table-column>
 
         <!-- 创建时间 -->
-        <el-table-column label="创建时间" prop="createTime" min-width="120" align="center">
+        <el-table-column
+          label="创建时间"
+          prop="createTime"
+          min-width="120"
+          align="center"
+        >
           <template #default="{ row }">
             <span class="time-text">{{ formatTime(row.createTime) }}</span>
           </template>
         </el-table-column>
 
         <!-- 操作 -->
-        <el-table-column label="操作" min-width="140" align="center" fixed="right">
+        <el-table-column
+          label="操作"
+          min-width="140"
+          align="center"
+          fixed="right"
+        >
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button 
                 type="primary" 
                 size="small" 
-                @click="handleEdit(row)"
                 class="action-btn edit-btn"
                 :icon="Edit"
+                @click="handleEdit(row)"
               >
-              编辑
-            </el-button>
+                编辑
+              </el-button>
               <el-button 
                 type="danger" 
                 size="small" 
-                @click="handleDelete(row)"
                 class="action-btn delete-btn"
                 :icon="Delete"
+                @click="handleDelete(row)"
               >
-              删除
-            </el-button>
+                删除
+              </el-button>
               <el-button 
                 type="info" 
                 size="small" 
-                @click="handleView(row)"
                 class="action-btn view-btn"
                 :icon="View"
+                @click="handleView(row)"
               >
                 查看
               </el-button>
@@ -208,7 +298,10 @@
     </div>
 
     <!-- 分页器 -->
-    <div v-if="pagination.total > 0" class="pagination-container">
+    <div
+      v-if="pagination.total > 0"
+      class="pagination-container"
+    >
       <el-pagination
         v-model:current-page="pagination.current"
         v-model:page-size="pagination.pageSize"
